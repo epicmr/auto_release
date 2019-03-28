@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"auto_release/models"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
+	"github.com/epicmr/auto_release/models"
 )
 
 type JsonRetMessage struct {

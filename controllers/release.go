@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"auto_release/models"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -12,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/astaxie/beego"
+	"github.com/epicmr/auto_release/models"
 )
 
 type ReleaseController struct {

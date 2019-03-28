@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"auto_release/controllers"
+	"github.com/epicmr/auto_release/controllers"
 
 	"github.com/astaxie/beego"
 )

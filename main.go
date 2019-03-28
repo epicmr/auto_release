@@ -1,9 +1,9 @@
 package main
 
 import (
-	_ "auto_release/routers"
 
 	"github.com/astaxie/beego"
+	_ "github.com/epicmr/auto_release/routers"
 )
 
 func main() {

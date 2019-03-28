@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/arthas29/sqlmapper"
+	"github.com/epicmr/auto_release/models/sqlmapper"
 	"github.com/astaxie/beego"
 	_ "github.com/go-sql-driver/mysql"
 )

@@ -1,0 +1,70 @@
+{
+	"ImportPath": "github.com/epicmr/auto_release",
+	"GoVersion": "go1.11",
+	"GodepVersion": "v80",
+	"Deps": [
+		{
+			"ImportPath": "github.com/astaxie/beego",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/config",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/context",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/context/param",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/grace",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/logs",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/session",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/toolbox",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/astaxie/beego/utils",
+			"Comment": "v1.10.1-30-g5b8e468",
+			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+		},
+		{
+			"ImportPath": "github.com/go-sql-driver/mysql",
+			"Comment": "v1.3-42-gfade210",
+			"Rev": "fade21009797158e7b79e04c340118a9220c6f9e"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/acme",
+			"Rev": "a5d413f7728c81fb97d96a2b722368945f651e78"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/acme/autocert",
+			"Rev": "a5d413f7728c81fb97d96a2b722368945f651e78"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Comment": "v2.2.2",
+			"Rev": "51d6538a90f86fe93ac480b35f37b2be17fef232"
+		}
+	]
+}
