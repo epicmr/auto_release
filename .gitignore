@@ -20,3 +20,4 @@ debug
 dist
 logs
 .cache
+auto_release
