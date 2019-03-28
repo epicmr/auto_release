@@ -47,7 +47,7 @@ func (this *ApiController) GetHosts() {
 	ctx := context.Background()
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 	models.CloseDb(db)
 
@@ -66,17 +66,17 @@ func (this *ApiController) GetConfs() {
 
 	err, serv_list := models.BatchQueryServ(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	servenvlist_map := make(map[string]models.ServEnv)
@@ -117,17 +117,17 @@ func (this *ApiController) GetConfsWithMd5() {
 
 	err, serv_list := models.BatchQueryServ(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	servenvlist_map := make(map[string]models.ServEnv)
@@ -150,7 +150,7 @@ func (this *ApiController) GetConfsWithMd5() {
 				if serv.ServName == serv_name {
 					remote := host.HostName
 					s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", remote, servenvlist_map[serv.ServName+host.Env].RemotePath, serv.ServName)
-					beego.Info(s)
+					logs.Info(s)
 
 					var stderr, stdout bytes.Buffer
 					cmd := exec.Command("/bin/sh", "-c", s)
@@ -165,7 +165,7 @@ func (this *ApiController) GetConfsWithMd5() {
 					}
 
 					vec_list := strings.Split(stdout.String(), " ")
-					beego.Info(vec_list)
+					logs.Info(vec_list)
 					if len(vec_list) > 0 {
 						serv_md5 = vec_list[0]
 					}
@@ -182,7 +182,7 @@ func (this *ApiController) GetConfsWithMd5() {
 		//获取本地md5
 		if serv.ServName == serv_name {
 			s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
-			beego.Info(s)
+			logs.Info(s)
 
 			var stderr, stdout bytes.Buffer
 			cmd := exec.Command("/bin/sh", "-c", s)
@@ -197,7 +197,7 @@ func (this *ApiController) GetConfsWithMd5() {
 			}
 
 			vec_list := strings.Split(stdout.String(), " ")
-			beego.Info(vec_list)
+			logs.Info(vec_list)
 			if len(vec_list) > 0 {
 				serv.ServMd5 = vec_list[0]
 			}
@@ -217,38 +217,38 @@ func (this *ApiController) UpdateServsConf() {
 	var servconf models.ServConf
 	json.Unmarshal(this.Ctx.Input.RequestBody, &servconf)
 	timestr := time.Now().Format("2006-01-02 15:04:05")
-	beego.Info(servconf)
+	logs.Info(servconf)
 
 	db := models.InitDb()
 	ctx := context.Background()
 	serv_list_old, err := models.QueryServByName(ctx, nil, db, servconf.Serv.ServName)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	if len(serv_list_old) > 0 {
 		_servconf := serv_list_old[0]
 		_servconf.LocalPath = servconf.Serv.LocalPath
 		_servconf.LastUpdateTime = timestr
-		beego.Info("UpdateServ", _servconf)
+		logs.Info("UpdateServ", _servconf)
 		err = models.UpdateServ(ctx, nil, db, &_servconf)
 		if err != nil {
-			beego.Info(err)
+			logs.Info(err)
 		}
 	} else {
 		_servconf := servconf.Serv
 		_servconf.CreateTime = timestr
 		_servconf.LastUpdateTime = timestr
-		beego.Info("InsertServ", _servconf)
+		logs.Info("InsertServ", _servconf)
 		err = models.InsertServ(ctx, nil, db, _servconf)
 		if err != nil {
-			beego.Info(err)
+			logs.Info(err)
 		}
 	}
 
 	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	servenvlist_map := make(map[string]models.ServEnv)
@@ -262,19 +262,19 @@ func (this *ApiController) UpdateServsConf() {
 			_servenv := servenv_old
 			_servenv.RemotePath = servenv.RemotePath
 			_servenv.LastUpdateTime = timestr
-			beego.Info("UpdateServEnv", _servenv)
+			logs.Info("UpdateServEnv", _servenv)
 			err = models.UpdateServEnv(ctx, nil, db, &_servenv)
 			if err != nil {
-				beego.Info(err)
+				logs.Info(err)
 			}
 		} else {
 			_servenv := servenv
 			_servenv.CreateTime = timestr
 			_servenv.LastUpdateTime = timestr
-			beego.Info("InsertServEnv", _servenv)
+			logs.Info("InsertServEnv", _servenv)
 			err = models.InsertServEnv(ctx, nil, db, _servenv)
 			if err != nil {
-				beego.Info(err)
+				logs.Info(err)
 			}
 		}
 	}
@@ -292,7 +292,7 @@ func (this *ApiController) UpdateServsConf() {
 //	userID, err := strconv.Atoi(ID)
 //
 //	if err != nil {
-//		beego.Info("UserID error")
+//		logs.Info("UserID error")
 //	}
 //
 //	c.Data["json"] = models.GetUser(userID)
@@ -342,17 +342,17 @@ func (this *ApiController) GetServs() {
 	ctx := context.Background()
 	err, serv_list_old := models.BatchQueryServ(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	serv_type2 := 0
@@ -385,7 +385,7 @@ func (this *ApiController) GetServs() {
 		serv_type2, _ := strconv.Atoi(host.ServType)
 		if host.Env == env && (serv_type2&12) > 0 {
 			remote := host.HostName
-			beego.Info("HostName", remote)
+			logs.Info("HostName", remote)
 
 			var stderr, stdout bytes.Buffer
 			var mapTime map[string]string
@@ -403,7 +403,7 @@ func (this *ApiController) GetServs() {
 				logs.Error(stderr.String())
 				goto end
 			}
-			//beego.Info(stdout.String())
+			//logs.Info(stdout.String())
 
 			vec_list = strings.Split(stdout.String(), "\n")
 			for _, detail := range vec_list {
@@ -421,11 +421,11 @@ func (this *ApiController) GetServs() {
 				serv_state := models.ServState{
 					HostName: host.HostName,
 					ServTime: mapTime[strings.TrimSuffix(serv.ServName, ".so")]}
-				beego.Info(serv.ServName, serv_state)
+				logs.Info(serv.ServName, serv_state)
 				serv.ServState = append(serv.ServState, serv_state)
 				serv_map[name] = serv
 			}
-			beego.Info(len(mapTime))
+			logs.Info(len(mapTime))
 		}
 	}
 
@@ -457,7 +457,7 @@ end:
 //	userID, err := strconv.Atoi(ID)
 //
 //	if err != nil {
-//		beego.Info("UserID error")
+//		logs.Info("UserID error")
 //	}
 //
 //	if models.DeleteUser(userID) {

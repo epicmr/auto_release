@@ -5,7 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/epicmr/auto_release/models/sqlmapper"
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -61,7 +61,7 @@ func InitDb() *sql.DB {
 	//db, err := sql.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8")
 	db, err := sql.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8")
 	if err != nil {
-		beego.Error("Mysql::Open failed. ")
+		logs.Error("Mysql::Open failed. ")
 		return nil
 	}
 	return db
@@ -217,20 +217,20 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //	beego.Info(timestr)
 //	stmt, err := db.Prepare("insert into t_release (Fmd5sum,Fenv,Fserv_name,Fserv_type,Flocal_path,Fremote_path,Flast_update_time,Fcreate_time) values (?,?,?,?,?,?,?,?)")
 //	if err != nil {
-//		beego.Error("Mysql::Prepare failed. ", err)
+//		logs.Error("Mysql::Prepare failed. ", err)
 //		return
 //	}
 //
 //	md5sum := fmt.Sprintf("%x", md5.Sum([]byte(serv.Env+strings.Trim(serv.RemotePath, "/"))))
 //	res, err := stmt.Exec(md5sum, serv.Env, serv.ServName, serv.ServType, serv.LocalPath, serv.RemotePath, timestr, timestr)
 //	if err != nil {
-//		beego.Error("Mysql::Exec failed. ", err)
+//		logs.Error("Mysql::Exec failed. ", err)
 //		return
 //	}
 //
 //	id, err := res.LastInsertId()
 //	if err != nil {
-//		beego.Error("Mysql::LastInsertId failed. ", err)
+//		logs.Error("Mysql::LastInsertId failed. ", err)
 //		return
 //	}
 //	beego.Info(id)
@@ -243,7 +243,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //	beego.Info(timestr)
 //	stmt, err := db.Prepare(`UPDATE t_release SET Fmd5sum = ?,Fenv = ?,Fserv_type=?,Flocal_path=?,Fremote_path=?,Flast_update_time=? WHERE Fserv_name=?`)
 //	if err != nil {
-//		beego.Error("Mysql::Prepare failed. ", err)
+//		logs.Error("Mysql::Prepare failed. ", err)
 //		return
 //	}
 //
@@ -251,7 +251,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //	res, err := stmt.Exec(md5sum, serv.Env, serv.ServType, serv.LocalPath, serv.RemotePath, timestr, serv.ServName)
 //	beego.Info(serv)
 //	if err != nil {
-//		beego.Error("Mysql::Exec failed. ", err)
+//		logs.Error("Mysql::Exec failed. ", err)
 //		return
 //	}
 //	num, err := res.RowsAffected()
@@ -262,7 +262,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //func QueryData(db *sql.DB, flt *ServFlt) map[string]string {
 //	rows, err := db.Query("SELECT Fmd5sum, Fenv,Fserv_name,Fserv_type,Flocal_path,Fremote_path,Flast_update_time,Fcreate_time from t_release where Fserv_name = ? and Fenv = ?", flt.ServName, flt.Env)
 //	if err != nil {
-//		beego.Error("Mysql::Query failed. ", err)
+//		logs.Error("Mysql::Query failed. ", err)
 //		return nil
 //	}
 //
@@ -291,7 +291,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //func QueryServsByEnv(db *sql.DB, flt *ServFlt) []Serv {
 //	rows, err := db.Query("SELECT Fserv_name,Fenv,Fremote_path,Flast_update_time,Fcreate_time from t_serv_env where Fenv = ?", flt.Env)
 //	if err != nil {
-//		beego.Error("Mysql::Query failed. ", err)
+//		logs.Error("Mysql::Query failed. ", err)
 //		return nil
 //	}
 //
@@ -318,7 +318,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //func QueryServsByEnv1(db *sql.DB, flt *ServFlt) map[string]map[string]string {
 //	rows, err := db.Query("SELECT Fserv_name,Fenv,Fremote_path,Flast_update_time,Fcreate_time from t_serv_env where Fenv = ?", flt.Env)
 //	if err != nil {
-//		beego.Error("Mysql::Query failed. ", err)
+//		logs.Error("Mysql::Query failed. ", err)
 //		return nil
 //	}
 //
@@ -347,7 +347,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 ////func BatchQueryServ(db *sql.DB) map[string]map[string]string {
 ////	rows, err := db.Query("SELECT Fserv_name,Fserv_type,Flocal_path,Flast_update_time,Fcreate_time from t_serv")
 ////	if err != nil {
-////		beego.Error("Mysql::Query failed.", err)
+////		logs.Error("Mysql::Query failed.", err)
 ////		return nil
 ////	}
 ////
@@ -376,7 +376,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 //func BatchQueryServHost(db *sql.DB) map[string][]map[string]string {
 //	rows, err := db.Query("SELECT Fenv,Fhost_name,Flast_update_time,Fcreate_time from t_host")
 //	if err != nil {
-//		beego.Error("Mysql::Query failed.", err)
+//		logs.Error("Mysql::Query failed.", err)
 //		return nil
 //	}
 //
@@ -406,7 +406,7 @@ func UpdateServEnv(ctx context.Context, tx *sql.Tx, db *sql.DB, row *ServEnv) er
 func CloseDb(db *sql.DB) {
 	err := db.Close()
 	if err != nil {
-		beego.Error("Mysql::Close failed. ")
+		logs.Error("Mysql::Close failed. ")
 		return
 	}
 	return

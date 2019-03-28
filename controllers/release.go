@@ -11,6 +11,7 @@ import (
 	"syscall"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/epicmr/auto_release/models"
 )
 
@@ -23,7 +24,7 @@ type ReleaseController struct {
 func (this *ReleaseController) Pack() {
 	var ob models.ServFlt
 	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
-	beego.Info(ob)
+	logs.Info(ob)
 
 	//更新spec版本号
 	db := models.InitDb()
@@ -31,12 +32,12 @@ func (this *ReleaseController) Pack() {
 
 	serv_list, err := models.QueryServByName(ctx, nil, db, ob.ServName)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	models.CloseDb(db)
@@ -53,7 +54,7 @@ func (this *ReleaseController) Pack() {
 
 	//打包
 	s := "cd /root/rpmbuild;rpmbuild -bb SPECS/" + ob.ServName + ".spec"
-	beego.Info(s)
+	logs.Info(s)
 	cmd := exec.Command("/bin/sh", "-c", s)
 
 	var stderr, stdout bytes.Buffer
@@ -62,14 +63,14 @@ func (this *ReleaseController) Pack() {
 
 	err = cmd.Run()
 	if nil != err {
-		beego.Error(err)
+		logs.Error(err)
 		this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "pack failed. ")
-		beego.Error(stdout.String())
-		beego.Error(stderr.String())
+		logs.Error(stdout.String())
+		logs.Error(stderr.String())
 		goto end
 	}
 
-	beego.Info(ob.ServName + " package passed")
+	logs.Info(ob.ServName + " package passed")
 
 end:
 	this.Data["json"] = this.genRetJson()
@@ -79,19 +80,19 @@ end:
 func (this *ReleaseController) Trans() {
 	var ob models.ServFlt
 	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
-	beego.Info(ob)
+	logs.Info(ob)
 
 	db := models.InitDb()
 	ctx := context.Background()
 
 	serv_list, err := models.QueryServByName(ctx, nil, db, ob.ServName)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	models.CloseDb(db)
@@ -101,7 +102,7 @@ func (this *ReleaseController) Trans() {
 
 	//最新版本
 	s := fmt.Sprintf("ls -lt /root/rpmbuild/RPMS/x86_64/ |grep -w %s |grep -w %s | awk -F' ' '{print $9}' |head -n 1", ob.Env, ob.ServName)
-	beego.Info(s)
+	logs.Info(s)
 	cmd := exec.Command("/bin/sh", "-c", s)
 
 	cmd.Stdout = &stdout
@@ -110,38 +111,38 @@ func (this *ReleaseController) Trans() {
 	err = cmd.Run()
 	if err != nil {
 		this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "trans list failed. ")
-		beego.Error(stdout.String())
-		beego.Error(stderr.String())
+		logs.Error(stdout.String())
+		logs.Error(stderr.String())
 		goto end
 	}
 
 	//包名
 	install_rpm = strings.Trim(stdout.String(), "\r\n")
-	beego.Info("Install RPM :", install_rpm)
+	logs.Info("Install RPM :", install_rpm)
 
 	for _, host := range host_list {
 		serv_type1, _ := strconv.Atoi(serv_list[0].ServType)
 		serv_type2, _ := strconv.Atoi(host.ServType)
 		if host.Env == ob.Env && (1<<uint8(serv_type1))&serv_type2 > 0 {
 			remote := host.HostName
-			beego.Info("HostName", remote)
+			logs.Info("HostName", remote)
 
 			//传输
 			s = fmt.Sprintf("cd /root/rpmbuild/RPMS/x86_64;scp %s %s:/data/upgrade", install_rpm, remote)
-			beego.Info(s)
+			logs.Info(s)
 			cmd = exec.Command("/bin/sh", "-c", s)
 
 			err = cmd.Run()
 			if err != nil {
 				this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "trans failed. ")
-				beego.Error(stdout.String())
-				beego.Error(stderr.String())
+				logs.Error(stdout.String())
+				logs.Error(stderr.String())
 				goto end
 			}
 		}
 	}
 
-	beego.Info(ob.ServName + " translate passed")
+	logs.Info(ob.ServName + " translate passed")
 
 end:
 	this.Data["json"] = this.genRetJson()
@@ -151,19 +152,19 @@ end:
 func (this *ReleaseController) Post() {
 	var ob models.ServFlt
 	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
-	beego.Info(ob)
+	logs.Info(ob)
 
 	db := models.InitDb()
 	ctx := context.Background()
 
 	serv_list, err := models.QueryServByName(ctx, nil, db, ob.ServName)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	err, host_list := models.BatchQueryHost(ctx, nil, db)
 	if err != nil {
-		beego.Info(err)
+		logs.Info(err)
 	}
 
 	models.CloseDb(db)
@@ -173,7 +174,7 @@ func (this *ReleaseController) Post() {
 
 	//最新版本
 	s := fmt.Sprintf("ls -lt /root/rpmbuild/RPMS/x86_64/ |grep -w %s |grep -w %s | awk -F' ' '{print $9}' |head -n 1", ob.Env, ob.ServName)
-	beego.Info(s)
+	logs.Info(s)
 	cmd := exec.Command("/bin/sh", "-c", s)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
@@ -181,39 +182,39 @@ func (this *ReleaseController) Post() {
 	err = cmd.Run()
 	if err != nil {
 		this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install list failed. ")
-		beego.Error(stdout.String())
-		beego.Error(stderr.String())
+		logs.Error(stdout.String())
+		logs.Error(stderr.String())
 		goto end
 	}
 
 	//包名
 	install_rpm = strings.Trim(stdout.String(), "\r\n")
-	beego.Info("Install RPM :", install_rpm)
+	logs.Info("Install RPM :", install_rpm)
 
 	for _, host := range host_list {
 		serv_type1, _ := strconv.Atoi(serv_list[0].ServType)
 		serv_type2, _ := strconv.Atoi(host.ServType)
 		if host.Env == ob.Env && (1<<uint8(serv_type1))&serv_type2 > 0 {
 			remote := host.HostName
-			beego.Info("HostName", remote)
+			logs.Info("HostName", remote)
 
 			s = fmt.Sprintf("ssh %s 'rpm -U --force /data/upgrade/%s'", remote, install_rpm)
-			beego.Info(s)
+			logs.Info(s)
 			cmd = exec.Command("/bin/sh", "-c", s)
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
 			err = cmd.Run()
 			if err != nil {
-				beego.Error(err)
+				logs.Error(err)
 				this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
-				beego.Error(stdout.String())
-				beego.Error(stderr.String())
+				logs.Error(stdout.String())
+				logs.Error(stderr.String())
 				goto end
 			}
 		}
 	}
 
-	beego.Info(ob.ServName + " install passed")
+	logs.Info(ob.ServName + " install passed")
 
 end:
 	this.Data["json"] = this.genRetJson()

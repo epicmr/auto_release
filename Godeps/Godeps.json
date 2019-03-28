@@ -5,53 +5,57 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/astaxie/beego",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/config",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/context",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/context/param",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/grace",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/logs",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/session",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/toolbox",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/utils",
-			"Comment": "v1.10.1-30-g5b8e468",
-			"Rev": "5b8e468a138596a4d5c39b5095e5cf3ab74675d1"
+			"Comment": "v1.10.1-218-g610f27d",
+			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
 		},
 		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
 			"Comment": "v1.3-42-gfade210",
 			"Rev": "fade21009797158e7b79e04c340118a9220c6f9e"
+		},
+		{
+			"ImportPath": "github.com/shiena/ansicolor",
+			"Rev": "a422bbe96644373c5753384a59d678f7d261ff10"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/acme",

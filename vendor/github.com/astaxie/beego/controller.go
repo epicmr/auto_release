@@ -34,15 +34,42 @@ import (
 
 var (
 	// ErrAbort custom error when user stop request handler manually.
-	ErrAbort = errors.New("User stop run")
+	ErrAbort = errors.New("user stop run")
 	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
+
+// ControllerFilter store the filter for controller
+type ControllerFilter struct {
+	Pattern        string
+	Pos            int
+	Filter         FilterFunc
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerFilterComments store the comment for controller level filter
+type ControllerFilterComments struct {
+	Pattern        string
+	Pos            int
+	Filter         string // NOQA
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerImportComments store the import comment for controller needed
+type ControllerImportComments struct {
+	ImportPath  string
+	ImportAlias string
+}
 
 // ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
+	Filters          []*ControllerFilter
+	ImportComments   []*ControllerImportComments
+	FilterComments   []*ControllerFilterComments
 	AllowHTTPMethods []string
 	Params           []map[string]string
 	MethodParams     []*param.MethodParam
@@ -66,7 +93,6 @@ type Controller struct {
 	controllerName string
 	actionName     string
 	methodMapping  map[string]func() //method:routertree
-	gotofunc       string
 	AppController  interface{}
 
 	// template data
@@ -129,37 +155,37 @@ func (c *Controller) Finish() {}
 
 // Get adds a request function to handle GET request.
 func (c *Controller) Get() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Post adds a request function to handle POST request.
 func (c *Controller) Post() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Delete adds a request function to handle DELETE request.
 func (c *Controller) Delete() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Put adds a request function to handle PUT request.
 func (c *Controller) Put() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Head adds a request function to handle HEAD request.
 func (c *Controller) Head() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Patch adds a request function to handle PATCH request.
 func (c *Controller) Patch() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Options adds a request function to handle OPTIONS request.
 func (c *Controller) Options() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // HandlerFunc call function with the name
@@ -265,11 +291,11 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
-	logAccess(c.Ctx, nil, code)
+	LogAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
 }
 
-// Set the data depending on the accepted
+// SetData set the data depending on the accepted
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
@@ -343,7 +369,7 @@ func (c *Controller) ServeXML() {
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeXML sends xml response.
+// ServeYAML sends yaml response.
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }

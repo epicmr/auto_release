@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 )
 
 func GenSpec(serv *Serv, servenv ServEnv) {
@@ -38,7 +38,7 @@ func GenSpec(serv *Serv, servenv ServEnv) {
 	sed += fmt.Sprintf("sed -i 's/REMOTE_PATH/%s/g' %s;", remote_path, destName)
 
 	sed += fmt.Sprintf("sed -i 's/RESTART_ARG/%s/g' %s;", restartArg, destName)
-	beego.Info(sed)
+	logs.Info(sed)
 
 	cmd := exec.Command("/bin/sh", "-c", sed)
 
