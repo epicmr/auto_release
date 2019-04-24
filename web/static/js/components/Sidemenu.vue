@@ -12,7 +12,7 @@
                     <i class="el-icon-upload"></i>
                     <span slot="title">发布</span>
                 </template>
-                <el-menu-item :index="'release-' + name" v-for="(host, name) in hosts">
+                <el-menu-item v-for="(host, name) in hosts.data" :key="host" :index="'release-' + name">
                     <i class="el-icon-upload"></i>
                     <span slot="title">{{name}}</span>
                 </el-menu-item>
@@ -20,11 +20,11 @@
 
             <el-submenu index="conf">
                 <template slot="title">
-                    <i class="el-icon-conf"></i>
+                    <i class="el-icon-setting"></i>
                     <span slot="title">配置</span>
                 </template>
                 <el-menu-item index="conf">
-                    <i class="el-icon-conf"></i>
+                    <i class="el-icon-setting"></i>
                     <span slot="title">服务</span>
                 </el-menu-item>
             </el-submenu>

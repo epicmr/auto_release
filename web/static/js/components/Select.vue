@@ -4,41 +4,41 @@
             <el-row>
                 <el-select @change="handleItemChange(value8)" v-model="value8" filterable placeholder="请选择">
                     <el-option v-for="item in list"
-                               :key="item.serv.serv_name"
-                               :label="item.serv.serv_name"
-                               :value="item.serv.serv_name">
+                               :key="item.serv_name"
+                               :label="item.serv_name"
+                               :value="item.serv_name">
                     </el-option>
                 </el-select>
                 <el-button class="button" type="primary" @click="EnableEdit" plain>{{AddOrEdit}}</el-button>
             </el-row>
 
             <el-row>
-                <el-input class="input" v-model="l_default.serv.serv_type" :disabled="editdisable">
+                <el-input class="input" v-model="l_default.serv_type" :disabled="editdisable">
                     <template slot="prepend">服务类型</template>
                 </el-input>
-                <el-input class="input" v-model="l_default.serv.serv_name" :disabled="editdisable">
+                <el-input class="input" v-model="l_default.serv_name" :disabled="editdisable">
                     <template slot="prepend">服务名称</template>
                 </el-input>
             </el-row>
             <el-row>
                 <el-col :span=16>
-                    <el-input class="input" v-model="l_default.serv.local_path" :disabled="editdisable">
+                    <el-input class="input" v-model="l_default.local_path" :disabled="editdisable">
                         <template slot="prepend">本地目录</template>
                     </el-input>
                 </el-col>
                 <el-col :span=8>
-                    <small>{{l_default.serv.serv_md5}}</small>
+                    <small>{{l_default.serv_md5}}</small>
                 </el-col>
             </el-row>
 
-            <el-row v-for="(path,env) in l_default.servenv_list">
+            <el-row v-for="env in l_default.serv_envs">
                 <el-col :span=16>
-                    <el-input v-model:value="path.remote_path" class="input" :disabled="editdisable">
-                        <template slot="prepend">{{env}}</template>
+                    <el-input v-model:value="env.remote_path" class="input" :disabled="editdisable">
+                        <template slot="prepend">{{env.env}}</template>
                     </el-input>
                 </el-col>
                 <el-col :span=8>
-                    <small>{{path.serv_md5}}</small>
+                    <small>{{env.serv_md5}}</small>
                 </el-col>
             </el-row>
 
@@ -78,9 +78,9 @@
                 var i
                 for (i in this.list) {
                     var l = this.list[i]
-                    if (l.serv.serv_name == this.value8 ) {
+                    if (l.serv_name == this.value8 ) {
                         this.l_default = l
-                        console.log(this.l_default.serv.serv_name)
+                        console.log(this.l_default.serv_name)
                         break;
                     }
                 }
@@ -103,16 +103,16 @@
                 console.log(this.l_default)
                 this.DisableEdit()
                 this.$http
-                    .get('/api/refresh', {params:{"serv_name": this.l_default.serv.serv_name}})
+                    .get('/api/refresh', {params:{"serv_name": this.l_default.serv_name}})
                     .then(response => {
                         var i
                         console.log(response.data)
                         for (i in response.data) {
                             var l = response.data[i]
-                            if (l.serv.serv_name == this.value8 ) {
+                            if (l.serv_name == this.value8 ) {
                                 this.l_default = l
                                 console.log(this.value8)
-                                console.log(this.l_default.serv.serv_md5)
+                                console.log(this.l_default.serv_md5)
                                 break;
                             }
                         }

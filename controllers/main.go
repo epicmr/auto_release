@@ -4,6 +4,7 @@ import (
 	"github.com/astaxie/beego"
 )
 
+//MainController main controller
 type MainController struct {
 	beego.Controller
 }

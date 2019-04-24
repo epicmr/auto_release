@@ -2,467 +2,434 @@ package controllers
 
 import (
 	"bytes"
-	"context"
-	"encoding/json"
 	"fmt"
 	"os/exec"
-	"strconv"
 	"strings"
-	"syscall"
-	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/epicmr/auto_release/models"
+	ms "github.com/epicmr/auto_release/models/mysql"
 )
 
-type JsonRetMessage struct {
+// JSONRetMsg represent return data
+type JSONRetMsg struct {
 	status  int
 	message string
+	data    interface{}
+	m       map[string]interface{}
 }
 
-func (r *JsonRetMessage) setError(_status int, _message string) {
+//GenRetJSON m to jsonM
+func (r *JSONRetMsg) GenRetJSON() map[string]interface{} {
+	if r.m == nil {
+		r.m = make(map[string]interface{})
+	}
+	logs.Debug("Status:[%d] Message:[%s]", r.status, r.message)
+	r.m["status"] = r.status
+	r.m["message"] = r.message
+
+	if r.status == 0 {
+		r.m["data"] = r.data
+	}
+
+	return r.m
+}
+
+func (r *JSONRetMsg) setError(_status int, _message string) {
 	r.status = _status
 	r.message = _message
 }
 
-func (r *JsonRetMessage) genRetJson() map[string]string {
-	var retMap map[string]string
-	retMap = make(map[string]string)
-
-	logs.Info("Status:[%d] Message:[%s]", r.status, r.message)
-	retMap["status"] = strconv.Itoa(r.status)
-	retMap["message"] = r.message
-
-	return retMap
+func (r *JSONRetMsg) setData(i interface{}) {
+	r.data = i
 }
 
-type ApiController struct {
+//APIController for backstage api
+type APIController struct {
 	beego.Controller
-	JsonRetMessage
+	JSONRetMsg
 }
 
-func (this *ApiController) GetHosts() {
-	db := models.InitDb()
-	ctx := context.Background()
-	err, host_list := models.BatchQueryHost(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-	models.CloseDb(db)
+//GetHosts return hosts
+func (c *APIController) GetHosts() {
+	db, _ := ms.InitDb()
 
-	env_map := make(map[string][]models.Host)
-	for _, host := range host_list {
-		env_map[host.Env] = append(env_map[host.Env], host)
+	var hosts []ms.Host
+	db.Find(&hosts)
+
+	envMap := make(map[string][]ms.Host)
+	for _, host := range hosts {
+		envMap[host.Env] = append(envMap[host.Env], host)
 	}
 
-	this.Data["json"] = &env_map
-	this.ServeJSON()
+	c.setData(envMap)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
 }
 
-func (this *ApiController) GetConfs() {
-	db := models.InitDb()
-	ctx := context.Background()
+//GetConfs returns confs
+func (c *APIController) GetConfs() {
+	db, _ := ms.InitDb()
 
-	err, serv_list := models.BatchQueryServ(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
+	var hosts []ms.Host
+	var servs []ms.Serv
+
+	db.Find(&hosts)
+	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+
+	c.setData(servs)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//GetConfsWithMd5 returns with md5
+func (c *APIController) GetConfsWithMd5() {
+	servName := c.GetString("serv_name")
+	db, _ := ms.InitDb()
+
+	var hosts []ms.Host
+	var servs []ms.Serv
+
+	db.Find(&hosts)
+	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+
+	mapHost := make(map[string]ms.Host)
+	for _, host := range hosts {
+		mapHost[host.Env] = host
 	}
 
-	err, host_list := models.BatchQueryHost(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-
-	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-
-	servenvlist_map := make(map[string]models.ServEnv)
-	for _, servenv := range servenv_list {
-		servenvlist_map[servenv.ServName+servenv.Env] = servenv
-	}
-
-	models.CloseDb(db)
-
-	servconf_list := make([]models.ServConf, 0)
-	for _, serv := range serv_list {
-		servenv_map := make(map[string]models.ServEnv)
-		for _, host := range host_list {
-			serv_type1, _ := strconv.Atoi(serv.ServType)
-			serv_type2, _ := strconv.Atoi(host.ServType)
-			if (1<<uint8(serv_type1))&serv_type2 > 0 {
-				servenv_map[host.Env] = models.ServEnv{
-					ServName:   serv.ServName,
-					Env:        host.Env,
-					RemotePath: servenvlist_map[serv.ServName+host.Env].RemotePath,
-					ServMd5:    ""}
-			}
+	for _, serv := range servs {
+		logs.Info(serv.ServName, servName)
+		if serv.ServName != servName {
+			continue
 		}
-		servconf := models.ServConf{
-			Serv:       serv,
-			ServEnvMap: servenv_map}
-		servconf_list = append(servconf_list, servconf)
-	}
+		logs.Info(len(serv.ServEnvs))
 
-	this.Data["json"] = &servconf_list
-	this.ServeJSON()
-}
+		for _, env := range serv.ServEnvs {
 
-func (this *ApiController) GetConfsWithMd5() {
-	serv_name := this.GetString("serv_name")
-	db := models.InitDb()
-	ctx := context.Background()
+			client, err := ssh.Dial("tcp", "11.22.33.44:22", config)
 
-	err, serv_list := models.BatchQueryServ(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-
-	err, host_list := models.BatchQueryHost(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-
-	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
-
-	servenvlist_map := make(map[string]models.ServEnv)
-	for _, servenv := range servenv_list {
-		servenvlist_map[servenv.ServName+servenv.Env] = servenv
-	}
-
-	models.CloseDb(db)
-
-	servconf_list := make([]models.ServConf, 0)
-	for _, serv := range serv_list {
-		servenv_map := make(map[string]models.ServEnv)
-		for _, host := range host_list {
-			serv_type1, _ := strconv.Atoi(serv.ServType)
-			serv_type2, _ := strconv.Atoi(host.ServType)
-			if (1<<uint8(serv_type1))&serv_type2 > 0 {
-
-				serv_md5 := ""
-				//获取远程md5
-				if serv.ServName == serv_name {
-					remote := host.HostName
-					s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", remote, servenvlist_map[serv.ServName+host.Env].RemotePath, serv.ServName)
-					logs.Info(s)
-
-					var stderr, stdout bytes.Buffer
-					cmd := exec.Command("/bin/sh", "-c", s)
-					cmd.Stdout = &stdout
-					cmd.Stderr = &stderr
-					err = cmd.Run()
-					if err != nil {
-						this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
-						logs.Error(stdout.String())
-						logs.Error(stderr.String())
-						continue
-					}
-
-					vec_list := strings.Split(stdout.String(), " ")
-					logs.Info(vec_list)
-					if len(vec_list) > 0 {
-						serv_md5 = vec_list[0]
-					}
-				}
-
-				servenv_map[host.Env] = models.ServEnv{
-					ServName:   serv.ServName,
-					Env:        host.Env,
-					RemotePath: servenvlist_map[serv.ServName+host.Env].RemotePath,
-					ServMd5:    serv_md5}
-			}
-		}
-
-		//获取本地md5
-		if serv.ServName == serv_name {
-			s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
-			logs.Info(s)
+			//获取远程md5
+			s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", mapHost[env.Env].HostName, env.RemotePath, serv.ServName)
+			logs.Debug(s)
 
 			var stderr, stdout bytes.Buffer
 			cmd := exec.Command("/bin/sh", "-c", s)
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr
-			err = cmd.Run()
+			err := cmd.Run()
 			if err != nil {
-				this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
 				logs.Error(stdout.String())
 				logs.Error(stderr.String())
 				continue
 			}
 
-			vec_list := strings.Split(stdout.String(), " ")
-			logs.Info(vec_list)
-			if len(vec_list) > 0 {
-				serv.ServMd5 = vec_list[0]
+			vecList := strings.Split(stdout.String(), " ")
+			logs.Debug(vecList)
+			if len(vecList) > 0 {
+				env.ServMd5 = vecList[0]
 			}
 		}
-
-		servconf := models.ServConf{
-			Serv:       serv,
-			ServEnvMap: servenv_map}
-		servconf_list = append(servconf_list, servconf)
 	}
 
-	this.Data["json"] = &servconf_list
-	this.ServeJSON()
+	// //获取本地md5
+	// if serv.ServName == servName {
+	// 	s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+	// 	logs.Debug(s)
+
+	// 	var stderr, stdout bytes.Buffer
+	// 	cmd := exec.Command("/bin/sh", "-c", s)
+	// 	cmd.Stdout = &stdout
+	// 	cmd.Stderr = &stderr
+	// 	err := cmd.Run()
+	// 	if err != nil {
+	// 		c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
+	// 		logs.Error(stdout.String())
+	// 		logs.Error(stderr.String())
+	// 	}
+
+	// 	vecList := strings.Split(stdout.String(), " ")
+	// 	logs.Debug(vecList)
+	// 	// if len(vecList) > 0 {
+	// 	// 	serv.ServMd5 = vecList[0]
+	// 	// }
+	// }
+
+	// servconf := models.ServConf{
+	// 	Serv:       serv,
+	// 	ServEnvMap: servEnvMap}
+	// servConfs = append(servConfs, servconf)
+	c.setData(servs)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
 }
 
-func (this *ApiController) UpdateServsConf() {
-	var servconf models.ServConf
-	json.Unmarshal(this.Ctx.Input.RequestBody, &servconf)
-	timestr := time.Now().Format("2006-01-02 15:04:05")
-	logs.Info(servconf)
+//GetConfsWithMd5 returns with md5
+// func (c *APIController) GetConfsWithMd5() {
+// 	servName := c.GetString("servName")
+// 	db, _ := ms.InitDb()
 
-	db := models.InitDb()
-	ctx := context.Background()
-	serv_list_old, err := models.QueryServByName(ctx, nil, db, servconf.Serv.ServName)
-	if err != nil {
-		logs.Info(err)
-	}
+// 	var servs []ms.Serv
+// 	db.Find(&servs)
 
-	if len(serv_list_old) > 0 {
-		_servconf := serv_list_old[0]
-		_servconf.LocalPath = servconf.Serv.LocalPath
-		_servconf.LastUpdateTime = timestr
-		logs.Info("UpdateServ", _servconf)
-		err = models.UpdateServ(ctx, nil, db, &_servconf)
-		if err != nil {
-			logs.Info(err)
-		}
-	} else {
-		_servconf := servconf.Serv
-		_servconf.CreateTime = timestr
-		_servconf.LastUpdateTime = timestr
-		logs.Info("InsertServ", _servconf)
-		err = models.InsertServ(ctx, nil, db, _servconf)
-		if err != nil {
-			logs.Info(err)
-		}
-	}
+// 	var hosts []ms.Host
+// 	db.Find(&hosts)
 
-	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
+// 	var servEnvs []ms.ServEnv
+// 	db.Find(&servEnvs)
 
-	servenvlist_map := make(map[string]models.ServEnv)
-	for _, servenv := range servenv_list {
-		servenvlist_map[servenv.ServName+servenv.Env] = servenv
-	}
+// 	servEnvListMap := make(map[string]ms.ServEnv)
+// 	for _, servEnv := range servEnvs {
+// 		servEnvListMap[servEnv.ServName+servEnv.Env] = servEnv
+// 	}
 
-	for _, servenv := range servconf.ServEnvMap {
-		servenv_old, ok := servenvlist_map[servenv.ServName+servenv.Env]
-		if ok {
-			_servenv := servenv_old
-			_servenv.RemotePath = servenv.RemotePath
-			_servenv.LastUpdateTime = timestr
-			logs.Info("UpdateServEnv", _servenv)
-			err = models.UpdateServEnv(ctx, nil, db, &_servenv)
-			if err != nil {
-				logs.Info(err)
-			}
-		} else {
-			_servenv := servenv
-			_servenv.CreateTime = timestr
-			_servenv.LastUpdateTime = timestr
-			logs.Info("InsertServEnv", _servenv)
-			err = models.InsertServEnv(ctx, nil, db, _servenv)
-			if err != nil {
-				logs.Info(err)
-			}
-		}
-	}
+// 	servConfs := make([]models.ServConf, 0)
+// 	for _, serv := range servs {
+// 		if serv.ServName != servName {
+// 			continue
+// 		}
 
-	models.CloseDb(db)
+// 		servEnvMap := make(map[string]models.ServEnvWithMd5)
+// 		for _, host := range hosts {
+// 			servType1 := serv.ServType
+// 			servType2 := host.ServType
+// 			if (1<<uint8(servType1))&servType2 > 0 {
 
-	this.Data["json"] = this.genRetJson()
-	this.ServeJSON()
-}
+// 				servMd5 := ""
+// 				//获取远程md5
+// 				remote := host.HostName
+// 				s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", remote, servEnvListMap[serv.ServName+host.Env].RemotePath, serv.ServName)
+// 				logs.Debug(s)
 
-//// GetUser returns a user by id
-//func (c *ApiController) GetUser() {
-//	ID := c.Ctx.Input.Param(":id")
-//
-//	userID, err := strconv.Atoi(ID)
-//
-//	if err != nil {
-//		logs.Info("UserID error")
-//	}
-//
-//	c.Data["json"] = models.GetUser(userID)
-//	c.ServeJSON()
-//}
-//
+// 				var stderr, stdout bytes.Buffer
+// 				cmd := exec.Command("/bin/sh", "-c", s)
+// 				cmd.Stdout = &stdout
+// 				cmd.Stderr = &stderr
+// 				err := cmd.Run()
+// 				if err != nil {
+// 					c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
+// 					logs.Error(stdout.String())
+// 					logs.Error(stderr.String())
+// 					continue
+// 				}
 
-//func (this *ApiController) GetConfs() {
-//	db := models.InitDb()
-//	servs := models.BatchQueryServ(db)
-//	envs := models.BatchQueryEnv(db)
-//	//serv2hosts := models.BatchQueryServHost(db)
-//	models.CloseDb(db)
-//
-//	//for _, serv := range servs {
-//	//	serv2host_list := make([]models.Serv2Host, 0)
-//	//	for _, env := range envs {
-//	//		for _, serv2env := range serv2envs {
-//	//			serv2host := models.Serv2Host{
-//	//				HostName:   env["host_name"],
-//	//				RemotePath: serv2env["remote_path"]}
-//	//		}
-//	//	}
-//	//}
-//
-//	for _, serv := range servs {
-//		//serv2host_list := make([]map[string]string, 0)
-//		for _, env := range envs {
-//			for _, host := range env {
-//				if serv["serv_type"] == host["serv_type"] {
-//					serv2host := make(map[string]string)
-//					serv2host["host_name"] = host["host_name"]
-//					//serv2host["remote_path"] = host["host_name"]
-//				}
-//			}
-//		}
-//	}
-//
-//	this.Data["json"] = &servs
-//	this.ServeJSON()
-//
-//}
-//
-func (this *ApiController) GetServs() {
-	env := this.GetString("env")
-	db := models.InitDb()
-	ctx := context.Background()
-	err, serv_list_old := models.BatchQueryServ(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
+// 				vecList := strings.Split(stdout.String(), " ")
+// 				logs.Debug(vecList)
+// 				if len(vecList) > 0 {
+// 					servMd5 = vecList[0]
+// 				}
 
-	err, host_list := models.BatchQueryHost(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
+// 				servEnvMap[host.Env] = models.ServEnvWithMd5{
+// 					Serv: ms.Serv{
+// 						ServName:   serv.ServName,
+// 						Env:        host.Env,
+// 						RemotePath: servEnvListMap[serv.ServName+host.Env].RemotePath},
+// 					Md5: servMd5}
+// 			}
+// 		}
 
-	err, servenv_list := models.BatchQueryServEnv(ctx, nil, db)
-	if err != nil {
-		logs.Info(err)
-	}
+// 		//获取本地md5
+// 		if serv.ServName == servName {
+// 			s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+// 			logs.Debug(s)
 
-	serv_type2 := 0
-	for _, host := range host_list {
-		if host.Env == env {
-			serv_type, _ := strconv.Atoi(host.ServType)
-			serv_type2 |= serv_type
-		}
-	}
+// 			var stderr, stdout bytes.Buffer
+// 			cmd := exec.Command("/bin/sh", "-c", s)
+// 			cmd.Stdout = &stdout
+// 			cmd.Stderr = &stderr
+// 			err := cmd.Run()
+// 			if err != nil {
+// 				c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
+// 				logs.Error(stdout.String())
+// 				logs.Error(stderr.String())
+// 			}
 
-	servenvlist_map := make(map[string]models.ServEnv)
-	for _, servenv := range servenv_list {
-		servenvlist_map[servenv.ServName+servenv.Env] = servenv
-	}
+// 			vecList := strings.Split(stdout.String(), " ")
+// 			logs.Debug(vecList)
+// 			// if len(vecList) > 0 {
+// 			// 	serv.ServMd5 = vecList[0]
+// 			// }
+// 		}
 
-	models.CloseDb(db)
+// 		servconf := models.ServConf{
+// 			Serv:       serv,
+// 			ServEnvMap: servEnvMap}
+// 		servConfs = append(servConfs, servconf)
+// 	}
 
-	serv_map := make(map[string]models.Serv)
-	for _, serv := range serv_list_old {
-		serv_type1, _ := strconv.Atoi(serv.ServType)
-		if (1<<uint8(serv_type1))&serv_type2 > 0 {
-			servenv_old, ok := servenvlist_map[serv.ServName+env]
-			if ok && len(servenv_old.RemotePath) > 0 {
-				serv_map[serv.ServName] = serv
-			}
-		}
-	}
+// 	c.setData(servConfs)
+// 	c.Data["json"] = c.GenRetJSON()
+// 	c.ServeJSON()
+// }
 
-	for _, host := range host_list {
-		serv_type2, _ := strconv.Atoi(host.ServType)
-		if host.Env == env && (serv_type2&12) > 0 {
-			remote := host.HostName
-			logs.Info("HostName", remote)
+// //UpdateServsConf update conf
+// func (c *APIController) UpdateServsConf() {
+// 	var servconf models.ServConf
+// 	json.Unmarshal(c.Ctx.Input.RequestBody, &servconf)
+// 	curTime := time.Now().Unix()
+// 	logs.Debug(servconf)
 
-			var stderr, stdout bytes.Buffer
-			var mapTime map[string]string
-			mapTime = make(map[string]string)
-			var vec_detail, vec_name, vec_list []string
-			s := fmt.Sprintf("ssh %s \"ps -eo etime,cmd |grep -v grep |grep cont_server\"", remote)
+// 	db, _ := ms.InitDb()
+// 	ctx := context.Background()
+// 	servListOld, err := ms.QueryServByName(ctx, nil, db, servconf.Serv.ServName)
+// 	if err != nil {
+// 		logs.Debug(err)
+// 	}
 
-			cmd := exec.Command("/bin/sh", "-c", s)
-			cmd.Stdout = &stdout
-			cmd.Stderr = &stderr
-			err = cmd.Run()
-			if err != nil {
-				this.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
-				logs.Error(stdout.String())
-				logs.Error(stderr.String())
-				goto end
-			}
-			//logs.Info(stdout.String())
+// 	if len(servListOld) > 0 {
+// 		_servconf := servListOld[0]
+// 		_servconf.LocalPath = servconf.Serv.LocalPath
+// 		//_servconf.LastUpdateTime = timestr
+// 		logs.Debug("UpdateServ", _servconf)
+// 		err = ms.UpdateServ(ctx, nil, db, &_servconf)
+// 		if err != nil {
+// 			logs.Debug(err)
+// 		}
+// 	} else {
+// 		_servconf := servconf.Serv
+// 		_servconf.CreateTime = curTime
+// 		_servconf.UpdateTime = curTime
+// 		logs.Debug("InsertServ", _servconf)
+// 		err = ms.InsertServ(ctx, nil, db, _servconf)
+// 		if err != nil {
+// 			logs.Debug(err)
+// 		}
+// 	}
 
-			vec_list = strings.Split(stdout.String(), "\n")
-			for _, detail := range vec_list {
-				vec_detail = strings.Split(strings.TrimSpace(detail), " ")
-				//logs.Info(vec_detail)
-				if len(vec_detail) > 1 && strings.HasSuffix(vec_detail[1], "cont_server") {
-					vec_name = strings.Split(vec_detail[1], "/")
-					if len(vec_name) > 1 {
-						mapTime[vec_name[1]] = vec_detail[0]
-					}
-				}
-			}
+// 	servEnvList, err := ms.BatchQueryServEnv(ctx, nil, db)
+// 	if err != nil {
+// 		logs.Debug(err)
+// 	}
 
-			for name, serv := range serv_map {
-				serv_state := models.ServState{
-					HostName: host.HostName,
-					ServTime: mapTime[strings.TrimSuffix(serv.ServName, ".so")]}
-				logs.Info(serv.ServName, serv_state)
-				serv.ServState = append(serv.ServState, serv_state)
-				serv_map[name] = serv
-			}
-			logs.Info(len(mapTime))
-		}
-	}
+// 	servEnvListMap := make(map[string]ms.ServEnv)
+// 	for _, servEnv := range servEnvList {
+// 		servEnvListMap[servEnv.ServName+servEnv.Env] = servEnv
+// 	}
 
-end:
-	this.Data["json"] = &serv_map
-	this.ServeJSON()
-}
+// 	for _, servEnv := range servconf.ServEnvMap {
+// 		servEnvOld, ok := servEnvListMap[servEnv.ServName+servEnv.Env]
+// 		if ok {
+// 			_servenv := servEnvOld
+// 			_servenv.RemotePath = servEnv.RemotePath
+// 			_servenv.UpdateTime = curTime
+// 			logs.Debug("UpdateServEnv", _servenv)
+// 			err = ms.UpdateServEnv(ctx, nil, db, &_servenv)
+// 			if err != nil {
+// 				logs.Debug(err)
+// 			}
+// 		} else {
+// 			_servenv := servEnv
+// 			_servenv.CreateTime = curTime
+// 			_servenv.UpdateTime = curTime
+// 			logs.Debug("InsertServEnv", _servenv)
+// 			err = ms.InsertServEnv(ctx, nil, db, _servenv)
+// 			if err != nil {
+// 				logs.Debug(err)
+// 			}
+// 		}
+// 	}
 
-//// AddUser adds a new user
-//func (c *ApiController) AddUser() {
-//	var user models.User
-//	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
-//	c.Data["json"] = models.AddUser(&user)
-//	c.ServeJSON()
-//}
-//
-//// UpdateUser updates existing user by id
-//func (c *ApiController) UpdateUser() {
-//	var user models.User
-//	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
-//	c.Data["json"] = models.UpdateUser(&user)
-//	c.ServeJSON()
-//}
-//
-//// DeleteUser deletes existing user by id
-//func (c *ApiController) DeleteUser() {
-//	ID := c.Ctx.Input.Param(":id")
-//
-//	userID, err := strconv.Atoi(ID)
-//
-//	if err != nil {
-//		logs.Info("UserID error")
-//	}
-//
-//	if models.DeleteUser(userID) {
-//		c.Abort("204")
-//	}
-//
-//	c.Abort("404")
-//}
+// 	ms.CloseDb(db)
+
+// 	c.Data["json"] = c.GenRetJSON()
+// 	c.ServeJSON()
+// }
+
+// //GetServs return servs
+// func (c *APIController) GetServs() {
+// 	env := c.GetString("env")
+// 	db, _ := ms.InitDb()
+// 	ctx := context.Background()
+// 	servListOld, err := ms.BatchQueryServ(ctx, nil, db)
+// 	if err != nil {
+// 		logs.Debug(err)
+// 	}
+
+// 	hostList, err := ms.BatchQueryHost(ctx, nil, db)
+// 	if err != nil {
+// 		logs.Debug(err)
+// 	}
+
+// 	servEnvList, err := ms.BatchQueryServEnv(ctx, nil, db)
+// 	if err != nil {
+// 		logs.Debug(err)
+// 	}
+
+// 	servType2 := 0
+// 	for _, host := range hostList {
+// 		if host.Env == env {
+// 			//servType, _ := strconv.Atoi(host.ServType)
+// 			servType := host.ServType
+// 			servType2 |= servType
+// 		}
+// 	}
+
+// 	servEnvListMap := make(map[string]ms.ServEnv)
+// 	for _, servEnv := range servEnvList {
+// 		servEnvListMap[servEnv.ServName+servEnv.Env] = servEnv
+// 	}
+
+// 	ms.CloseDb(db)
+
+// 	servMap := make(map[string]ms.Serv)
+// 	for _, serv := range servListOld {
+// 		servType1 := serv.ServType
+// 		if (1<<uint8(servType1))&servType2 > 0 {
+// 			servEnvOld, ok := servEnvListMap[serv.ServName+env]
+// 			if ok && len(servEnvOld.RemotePath) > 0 {
+// 				servMap[serv.ServName] = serv
+// 			}
+// 		}
+// 	}
+
+// 	for _, host := range hostList {
+// 		servType2 := host.ServType
+// 		if host.Env == env && (servType2&12) > 0 {
+// 			remote := host.HostName
+// 			logs.Debug("HostName", remote)
+
+// 			var stderr, stdout bytes.Buffer
+// 			var mapTime map[string]string
+// 			mapTime = make(map[string]string)
+// 			var vecDetail, vecName, vecList []string
+// 			s := fmt.Sprintf("ssh %s \"ps -eo etime,cmd |grep -v grep |grep cont_server\"", remote)
+
+// 			cmd := exec.Command("/bin/sh", "-c", s)
+// 			cmd.Stdout = &stdout
+// 			cmd.Stderr = &stderr
+// 			err = cmd.Run()
+// 			if err != nil {
+// 				//c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
+// 				logs.Error(stdout.String())
+// 				logs.Error(stderr.String())
+// 				goto end
+// 			}
+
+// 			vecList = strings.Split(stdout.String(), "\n")
+// 			for _, detail := range vecList {
+// 				vecDetail = strings.Split(strings.TrimSpace(detail), " ")
+// 				if len(vecDetail) > 1 && strings.HasSuffix(vecDetail[1], "cont_server") {
+// 					vecName = strings.Split(vecDetail[1], "/")
+// 					if len(vecName) > 1 {
+// 						mapTime[vecName[1]] = vecDetail[0]
+// 					}
+// 				}
+// 			}
+
+// 			for name, serv := range servMap {
+// 				servState := ms.ServState{
+// 					HostName: host.HostName,
+// 					ServTime: mapTime[strings.TrimSuffix(serv.ServName, ".so")]}
+// 				logs.Debug(serv.ServName, servState)
+// 				//serv.ServState = append(serv.ServState, servState)
+// 				servMap[name] = serv
+// 			}
+// 			logs.Debug(len(mapTime))
+// 		}
+// 	}
+// 	logs.Debug("GetServs")
+
+// end:
+// 	c.Data["json"] = &servMap
+// 	c.ServeJSON()
+// }

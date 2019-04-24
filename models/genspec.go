@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	ms "github.com/epicmr/auto_release/models/mysql"
 )
 
-func GenSpec(serv *Serv, servenv ServEnv) {
+func GenSpec(serv *ms.Serv, servenv ms.ServEnv) {
 	rpmPath := "/root/rpmbuild/SPECS/"
 	srcName := fmt.Sprintf("%s/template/TEMPLATE_%s.spec", rpmPath, serv.ServType)
 	destName := fmt.Sprintf("%s/%s", rpmPath, serv.ServName+".spec")
