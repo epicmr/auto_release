@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"golang.org/x/crypto/ssh"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	ms "github.com/epicmr/auto_release/models/mysql"

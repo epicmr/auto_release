@@ -54,16 +54,61 @@
 			"Rev": "fade21009797158e7b79e04c340118a9220c6f9e"
 		},
 		{
+			"ImportPath": "github.com/jinzhu/gorm",
+			"Comment": "v1.9.4-1-g7bc3561",
+			"Rev": "7bc35615034c1d6994088c2cc925086fba6f565e"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/inflection",
+			"Rev": "04140366298a54a039076d798123ffa108fff46c"
+		},
+		{
 			"ImportPath": "github.com/shiena/ansicolor",
 			"Rev": "a422bbe96644373c5753384a59d678f7d261ff10"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/acme",
-			"Rev": "a5d413f7728c81fb97d96a2b722368945f651e78"
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/acme/autocert",
-			"Rev": "a5d413f7728c81fb97d96a2b722368945f651e78"
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/curve25519",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ed25519",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ed25519/internal/edwards25519",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/internal/chacha20",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/internal/subtle",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/poly1305",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh",
+			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/cpu",
+			"Rev": "953cdadca894cdc07be76fc99f95b40c28f06623"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "953cdadca894cdc07be76fc99f95b40c28f06623"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
