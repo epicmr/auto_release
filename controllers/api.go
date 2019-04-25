@@ -8,7 +8,6 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	"github.com/epicmr/auto_release/models"
 	ms "github.com/epicmr/auto_release/models/mysql"
 )
 
@@ -108,27 +107,27 @@ func (c *APIController) GetConfsWithMd5() {
 
 		//获取远程md5
 		for j, env := range serv.ServEnvs {
-			ciphers := []string{}
-
 			host, ok := mapEnv[env.Env]
 			if !ok {
 				c.setError(1, fmt.Sprintf("Env:[%s] not config host. ", env.Env))
 				logs.Error("Env:[%s] not config host. ", env.Env)
 				goto end
 			}
-			session, err := models.Connect(host.User, "", host.IP, host.KeyFile, host.Port, ciphers)
-			if err != nil {
-				logs.Info(err)
-			}
 
 			var stderr, stdout bytes.Buffer
-			session.Stdout = &stdout
-			session.Stderr = &stderr
 			s := fmt.Sprintf("md5sum %s/%s", env.RemotePath, serv.ServName)
-			err = session.Run(s)
+			cmd := exec.Command("ssh", host.HostName, s)
+			cmd.Stdout = &stdout
+			cmd.Stderr = &stderr
+
+			err := cmd.Run()
 			if err != nil {
-				logs.Info(session.Stderr)
+				logs.Info(stderr.String())
+				c.setError(1, fmt.Sprintf("HostName:[%s] exec[%s] failed. ", host.HostName, s))
+				logs.Error("HostName:[%s] exec[%s] failed. ", host.HostName, s)
+				goto end
 			}
+			logs.Info(stdout.String())
 
 			vecList := strings.Split(stdout.String(), " ")
 			logs.Debug(vecList)
@@ -140,7 +139,7 @@ func (c *APIController) GetConfsWithMd5() {
 		//获取本地md5
 		var stderr, stdout bytes.Buffer
 		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
-		cmd := exec.Command("/bin/sh", "-c", s)
+		cmd := exec.Command("ssh", "pengnenghui@172.30.12.68", s)
 		cmd.Stdout = &stdout
 		cmd.Stderr = &stderr
 
