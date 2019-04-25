@@ -98,12 +98,9 @@
                 this.$http
                     .get('/api/refresh', {params:{"serv_name": this.selectedServ.serv_name}})
                     .then(response => {
-                        for (let i in response.data.data) {
-                            let serv = response.data.data[i]
-                            if (serv.serv_name == this.selectedServName ) {
-                                this.selectedServ = serv
-                                break;
-                            }
+                        let serv = response.data.data
+                        if (serv.serv_name == this.selectedServName ) {
+                            this.selectedServ = serv
                         }
                     })
             }
