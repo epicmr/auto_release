@@ -11,7 +11,7 @@ import (
 func init() {
 	db, _ := ms.InitDb()
 	defer db.Close()
-	db.AutoMigrate(&ms.Host{}, &ms.Serv{}, &ms.ServEnv{})
+	db.AutoMigrate(&ms.Env{}, &ms.Host{}, &ms.Serv{}, &ms.ServEnv{})
 	// orm.RegisterDriver("mysql", orm.DRMySQL)
 	// orm.RegisterModel(&ms.Host{})
 	//orm.RegisterDataBase("default", "mysql", "root:root@/orm_test?charset=utf8")

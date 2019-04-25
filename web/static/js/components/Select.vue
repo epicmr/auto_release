@@ -2,7 +2,7 @@
     <div class="grid-content" v-loading="this.$store.state.loading">
         <el-col>
             <el-row>
-                <el-select @change="handleItemChange(value8)" v-model="value8" filterable placeholder="请选择">
+                <el-select @change="handleItemChange(selectedServName)" v-model="selectedServName" filterable placeholder="请选择">
                     <el-option v-for="item in list"
                                :key="item.serv_name"
                                :label="item.serv_name"
@@ -13,25 +13,25 @@
             </el-row>
 
             <el-row>
-                <el-input class="input" v-model="l_default.serv_type" :disabled="editdisable">
+                <el-input class="input" v-model="selectedServ.serv_type" :disabled="editdisable">
                     <template slot="prepend">服务类型</template>
                 </el-input>
-                <el-input class="input" v-model="l_default.serv_name" :disabled="editdisable">
+                <el-input class="input" v-model="selectedServ.serv_name" :disabled="editdisable">
                     <template slot="prepend">服务名称</template>
                 </el-input>
             </el-row>
             <el-row>
                 <el-col :span=16>
-                    <el-input class="input" v-model="l_default.local_path" :disabled="editdisable">
+                    <el-input class="input" v-model="selectedServ.local_path" :disabled="editdisable">
                         <template slot="prepend">本地目录</template>
                     </el-input>
                 </el-col>
                 <el-col :span=8>
-                    <small>{{l_default.serv_md5}}</small>
+                    <small>{{selectedServ.serv_md5}}</small>
                 </el-col>
             </el-row>
 
-            <el-row v-for="env in l_default.serv_envs">
+            <el-row v-for="env in selectedServ.serv_envs">
                 <el-col :span=16>
                     <el-input v-model:value="env.remote_path" class="input" :disabled="editdisable">
                         <template slot="prepend">{{env.env}}</template>
@@ -55,11 +55,9 @@
         name: "v-select",
         data() {
             return {
-                value8: '',
-                l_default: {
-                    serv:{},
-                    servenv_list:{
-                    }
+                selectedServName: '',
+                selectedServ: {
+                    serv:{}
                 },
                 editdisable: true
             }
@@ -72,15 +70,11 @@
         },
         methods: {
             handleItemChange(val) {
-                console.log(this.list)
-                console.log(this.value8)
                 this.DisableEdit()
-                var i
-                for (i in this.list) {
-                    var l = this.list[i]
-                    if (l.serv_name == this.value8 ) {
-                        this.l_default = l
-                        console.log(this.l_default.serv_name)
+                for (let i in this.list) {
+                    let serv = this.list[i]
+                    if (serv.serv_name == this.selectedServName) {
+                        this.selectedServ = serv
                         break;
                     }
                 }
@@ -94,29 +88,23 @@
                 this.editdisable = true
             },
             Conf() {
-                console.log(this.l_default)
+                console.log(this.selectedServ)
                 this.DisableEdit()
-                this.$store.dispatch("Conf", this.l_default)
+                this.$store.dispatch("Conf", this.selectedServ)
                 console.log("mm",this.list)
             },
             Refresh() {
-                console.log(this.l_default)
                 this.DisableEdit()
                 this.$http
-                    .get('/api/refresh', {params:{"serv_name": this.l_default.serv_name}})
+                    .get('/api/refresh', {params:{"serv_name": this.selectedServ.serv_name}})
                     .then(response => {
-                        var i
-                        console.log(response.data)
-                        for (i in response.data) {
-                            var l = response.data[i]
-                            if (l.serv_name == this.value8 ) {
-                                this.l_default = l
-                                console.log(this.value8)
-                                console.log(this.l_default.serv_md5)
+                        for (let i in response.data.data) {
+                            let serv = response.data.data[i]
+                            if (serv.serv_name == this.selectedServName ) {
+                                this.selectedServ = serv
                                 break;
                             }
                         }
-                        console.log(this.l_default)
                     })
             }
         },
@@ -129,7 +117,7 @@
             },
             AddOrEdit: {
                 get() {
-                    if (this.l_default.serv_name == "" ) {
+                    if (this.selectedServ.serv_name == "" ) {
                         return "新增"
                     }
                     return "编辑"

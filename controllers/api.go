@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"golang.org/x/crypto/ssh"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
+	"github.com/epicmr/auto_release/models"
 	ms "github.com/epicmr/auto_release/models/mysql"
 )
 
@@ -51,16 +51,16 @@ type APIController struct {
 	JSONRetMsg
 }
 
-//GetHosts return hosts
+//GetHosts return envs
 func (c *APIController) GetHosts() {
 	db, _ := ms.InitDb()
 
-	var hosts []ms.Host
-	db.Find(&hosts)
+	var envs []ms.Env
+	db.Find(&envs)
 
-	envMap := make(map[string][]ms.Host)
-	for _, host := range hosts {
-		envMap[host.Env] = append(envMap[host.Env], host)
+	envMap := make(map[string][]ms.Env)
+	for _, env := range envs {
+		envMap[env.Name] = append(envMap[env.Name], env)
 	}
 
 	c.setData(envMap)
@@ -72,10 +72,10 @@ func (c *APIController) GetHosts() {
 func (c *APIController) GetConfs() {
 	db, _ := ms.InitDb()
 
-	var hosts []ms.Host
+	var envs []ms.Env
 	var servs []ms.Serv
 
-	db.Find(&hosts)
+	db.Find(&envs)
 	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
 
 	c.setData(servs)
@@ -88,79 +88,78 @@ func (c *APIController) GetConfsWithMd5() {
 	servName := c.GetString("serv_name")
 	db, _ := ms.InitDb()
 
-	var hosts []ms.Host
+	var envs []ms.Env
 	var servs []ms.Serv
 
-	db.Find(&hosts)
+	db.Debug().Preload("Hosts").Find(&envs).GetErrors()
 	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
 
-	mapHost := make(map[string]ms.Host)
-	for _, host := range hosts {
-		mapHost[host.Env] = host
+	mapEnv := make(map[string]ms.Host)
+	for _, env := range envs {
+		if len(env.Hosts) > 0 {
+			mapEnv[env.Name] = env.Hosts[0]
+		}
 	}
 
-	for _, serv := range servs {
-		logs.Info(serv.ServName, servName)
+	for i, serv := range servs {
 		if serv.ServName != servName {
 			continue
 		}
-		logs.Info(len(serv.ServEnvs))
 
-		for _, env := range serv.ServEnvs {
+		//获取远程md5
+		for j, env := range serv.ServEnvs {
+			ciphers := []string{}
 
-			client, err := ssh.Dial("tcp", "11.22.33.44:22", config)
-
-			//获取远程md5
-			s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", mapHost[env.Env].HostName, env.RemotePath, serv.ServName)
-			logs.Debug(s)
+			host, ok := mapEnv[env.Env]
+			if !ok {
+				c.setError(1, fmt.Sprintf("Env:[%s] not config host. ", env.Env))
+				logs.Error("Env:[%s] not config host. ", env.Env)
+				goto end
+			}
+			session, err := models.Connect(host.User, "", host.IP, host.KeyFile, host.Port, ciphers)
+			if err != nil {
+				logs.Info(err)
+			}
 
 			var stderr, stdout bytes.Buffer
-			cmd := exec.Command("/bin/sh", "-c", s)
-			cmd.Stdout = &stdout
-			cmd.Stderr = &stderr
-			err := cmd.Run()
+			session.Stdout = &stdout
+			session.Stderr = &stderr
+			s := fmt.Sprintf("md5sum %s/%s", env.RemotePath, serv.ServName)
+			err = session.Run(s)
 			if err != nil {
-				logs.Error(stdout.String())
-				logs.Error(stderr.String())
-				continue
+				logs.Info(session.Stderr)
 			}
 
 			vecList := strings.Split(stdout.String(), " ")
 			logs.Debug(vecList)
 			if len(vecList) > 0 {
-				env.ServMd5 = vecList[0]
+				serv.ServEnvs[j].ServMd5 = vecList[0]
 			}
+		}
+
+		//获取本地md5
+		var stderr, stdout bytes.Buffer
+		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+		cmd := exec.Command("/bin/sh", "-c", s)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+
+		err := cmd.Run()
+		if err != nil {
+			logs.Info(stderr.String())
+		}
+		logs.Info(stdout.String())
+
+		vecList := strings.Split(stdout.String(), " ")
+		logs.Debug(vecList)
+		if len(vecList) > 0 {
+			servs[i].ServMd5 = vecList[0]
 		}
 	}
 
-	// //获取本地md5
-	// if serv.ServName == servName {
-	// 	s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
-	// 	logs.Debug(s)
-
-	// 	var stderr, stdout bytes.Buffer
-	// 	cmd := exec.Command("/bin/sh", "-c", s)
-	// 	cmd.Stdout = &stdout
-	// 	cmd.Stderr = &stderr
-	// 	err := cmd.Run()
-	// 	if err != nil {
-	// 		c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
-	// 		logs.Error(stdout.String())
-	// 		logs.Error(stderr.String())
-	// 	}
-
-	// 	vecList := strings.Split(stdout.String(), " ")
-	// 	logs.Debug(vecList)
-	// 	// if len(vecList) > 0 {
-	// 	// 	serv.ServMd5 = vecList[0]
-	// 	// }
-	// }
-
-	// servconf := models.ServConf{
-	// 	Serv:       serv,
-	// 	ServEnvMap: servEnvMap}
-	// servConfs = append(servConfs, servconf)
 	c.setData(servs)
+
+end:
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
 }
@@ -173,8 +172,8 @@ func (c *APIController) GetConfsWithMd5() {
 // 	var servs []ms.Serv
 // 	db.Find(&servs)
 
-// 	var hosts []ms.Host
-// 	db.Find(&hosts)
+// 	var envs []ms.Env
+// 	db.Find(&envs)
 
 // 	var servEnvs []ms.ServEnv
 // 	db.Find(&servEnvs)
@@ -191,15 +190,15 @@ func (c *APIController) GetConfsWithMd5() {
 // 		}
 
 // 		servEnvMap := make(map[string]models.ServEnvWithMd5)
-// 		for _, host := range hosts {
+// 		for _, env := range envs {
 // 			servType1 := serv.ServType
-// 			servType2 := host.ServType
+// 			servType2 := env.ServType
 // 			if (1<<uint8(servType1))&servType2 > 0 {
 
 // 				servMd5 := ""
 // 				//获取远程md5
-// 				remote := host.HostName
-// 				s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", remote, servEnvListMap[serv.ServName+host.Env].RemotePath, serv.ServName)
+// 				remote := env.HostName
+// 				s := fmt.Sprintf("ssh %s \"md5sum %s/%s\"", remote, servEnvListMap[serv.ServName+env.Env].RemotePath, serv.ServName)
 // 				logs.Debug(s)
 
 // 				var stderr, stdout bytes.Buffer
@@ -220,11 +219,11 @@ func (c *APIController) GetConfsWithMd5() {
 // 					servMd5 = vecList[0]
 // 				}
 
-// 				servEnvMap[host.Env] = models.ServEnvWithMd5{
+// 				servEnvMap[env.Env] = models.ServEnvWithMd5{
 // 					Serv: ms.Serv{
 // 						ServName:   serv.ServName,
-// 						Env:        host.Env,
-// 						RemotePath: servEnvListMap[serv.ServName+host.Env].RemotePath},
+// 						Env:        env.Env,
+// 						RemotePath: servEnvListMap[serv.ServName+env.Env].RemotePath},
 // 					Md5: servMd5}
 // 			}
 // 		}
@@ -357,10 +356,10 @@ func (c *APIController) GetConfsWithMd5() {
 // 	}
 
 // 	servType2 := 0
-// 	for _, host := range hostList {
-// 		if host.Env == env {
-// 			//servType, _ := strconv.Atoi(host.ServType)
-// 			servType := host.ServType
+// 	for _, env := range hostList {
+// 		if env.Env == env {
+// 			//servType, _ := strconv.Atoi(env.ServType)
+// 			servType := env.ServType
 // 			servType2 |= servType
 // 		}
 // 	}
@@ -383,10 +382,10 @@ func (c *APIController) GetConfsWithMd5() {
 // 		}
 // 	}
 
-// 	for _, host := range hostList {
-// 		servType2 := host.ServType
-// 		if host.Env == env && (servType2&12) > 0 {
-// 			remote := host.HostName
+// 	for _, env := range hostList {
+// 		servType2 := env.ServType
+// 		if env.Env == env && (servType2&12) > 0 {
+// 			remote := env.HostName
 // 			logs.Debug("HostName", remote)
 
 // 			var stderr, stdout bytes.Buffer
@@ -419,7 +418,7 @@ func (c *APIController) GetConfsWithMd5() {
 
 // 			for name, serv := range servMap {
 // 				servState := ms.ServState{
-// 					HostName: host.HostName,
+// 					HostName: env.HostName,
 // 					ServTime: mapTime[strings.TrimSuffix(serv.ServName, ".so")]}
 // 				logs.Debug(serv.ServName, servState)
 // 				//serv.ServState = append(serv.ServState, servState)
