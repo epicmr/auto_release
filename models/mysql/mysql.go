@@ -10,10 +10,8 @@ var (
 )
 
 type Base struct {
-	ID          int64 `gorm:"primary_key;not null;comment:'ID'" json:"id"`
-	CreateTime  int64 `gorm:"not null;default:0;comment:'创建时间'" json:"create_time"`
-	UpdateTime  int64 `gorm:"not null;default:0;comment:'更新时间'" json:"update_time"`
-	DataVersion int   `gorm:"not null;default:0;comment:'数据版本'" json:"-"`
+	gorm.Model
+	DataVersion int `gorm:"not null;default:0;comment:'数据版本'" json:"-"`
 }
 
 type Env struct {
@@ -26,12 +24,8 @@ type Env struct {
 type Host struct {
 	Base
 	EnvID    int64  `gorm:"not null;default:0;comment:'EnvID'" json:"env_id"`
-	HostName string `gorm:"size:16;not null;default:'';comment:'HOST'" json:"host_name"`
+	Name     string `gorm:"size:16;not null;default:'';comment:'HOST'" json:"name"`
 	ServType int    `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
-	User     string `gorm:"size:32;not null;default:'';comment:'user'" json:"user"`
-	IP       string `gorm:"size:16;not null;default:'';comment:'IP'" json:"ip"`
-	Port     int    `gorm:"not null;default:0;comment:'Port'" json:"port"`
-	KeyFile  string `gorm:"size:64;not null;default:'';comment:'KeyFile'" json:"key_file"`
 }
 
 type Serv struct {

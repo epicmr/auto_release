@@ -75,31 +75,32 @@ func (c *APIController) GetConfs() {
 	var servs []ms.Serv
 
 	db.Find(&envs)
-    db.Debug().Find(&envs).GetErrors()
+	db.Debug().Find(&envs).GetErrors()
 	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+	logs.Info(envs)
 
-    mapServEnv := make(map[string]ms.ServEnv)
-    for _, serv := range servs {
-        for _, servEnv := range serv.ServEnvs {
-            mapServEnv[serv.ServName + servEnv.Env] = servEnv
-        }
-    }
+	mapServEnv := make(map[string]ms.ServEnv)
+	for _, serv := range servs {
+		for _, servEnv := range serv.ServEnvs {
+			mapServEnv[serv.ServName+servEnv.Env] = servEnv
+		}
+	}
 
-    for i, serv := range servs {
-        for _, env := range envs {
-            servType1 := serv.ServType
-            servType2 := env.ServType
-            if (1<<uint8(servType1)) & servType2 > 0 {
-                if _, ok := mapServEnv[serv.ServName + env.Name]; !ok {
-                    servEnv := ms.ServEnv {
-                        ServName:serv.ServName,
-                        Env:env.Name,
-                        RemotePath:"" }
-                    servs[i].ServEnvs = append(servs[i].ServEnvs, servEnv);
-                }
-            }
-        }
-    }
+	for i, serv := range servs {
+		for _, env := range envs {
+			servType1 := serv.ServType
+			servType2 := env.ServType
+			if (1<<uint8(servType1))&servType2 > 0 {
+				if _, ok := mapServEnv[serv.ServName+env.Name]; !ok {
+					servEnv := ms.ServEnv{
+						ServName:   serv.ServName,
+						Env:        env.Name,
+						RemotePath: ""}
+					servs[i].ServEnvs = append(servs[i].ServEnvs, servEnv)
+				}
+			}
+		}
+	}
 
 	c.setData(servs)
 	c.Data["json"] = c.GenRetJSON()
@@ -108,89 +109,84 @@ func (c *APIController) GetConfs() {
 
 //GetConfsWithMd5 returns with md5
 func (c *APIController) GetConfsWithMd5() {
-    servName := c.GetString("serv_name")
-    db, _ := ms.InitDb()
+	servName := c.GetString("serv_name")
+	db, _ := ms.InitDb()
 
-    var envs []ms.Env
-    var serv ms.Serv
+	var envs []ms.Env
+	var serv ms.Serv
 
-    db.Debug().Preload("Hosts").Find(&envs).GetErrors()
-    db.Debug().Preload("ServEnvs").Where("serv_name = ?", servName).First(&serv).GetErrors()
+	db.Debug().Preload("Hosts").Find(&envs).GetErrors()
+	db.Debug().Preload("ServEnvs").Where("serv_name = ?", servName).First(&serv).GetErrors()
 
-    mapEnv := make(map[string]ms.Env)
-    for _, env := range envs {
-        if len(env.Hosts) > 0 {
-            mapEnv[env.Name] = env
-        }
-    }
+	db.Debug().Save(&serv)
 
-    mapServEnv := make(map[string]*ms.ServEnv)
-    for i, servEnv := range serv.ServEnvs {
-        mapServEnv[servEnv.Env] = &serv.ServEnvs[i]
-    }
+	mapServEnv := make(map[string]*ms.ServEnv)
+	for i, servEnv := range serv.ServEnvs {
+		mapServEnv[servEnv.Env] = &serv.ServEnvs[i]
+	}
 
-    for _, env := range envs {
-        host := env.Hosts[0]
-        servType1 := serv.ServType
-        servType2 := env.ServType
-        if (1<<uint8(servType1)) & servType2 > 0 {
-            if servEnv, ok := mapServEnv[env.Name]; ok {
-                var stderr, stdout bytes.Buffer
-                s := fmt.Sprintf("md5sum %s/%s", servEnv.RemotePath, serv.ServName)
-                cmd := exec.Command("ssh", host.HostName, s)
-                cmd.Stdout = &stdout
-                cmd.Stderr = &stderr
+	for _, env := range envs {
+		host := env.Hosts[0]
+		servType1 := serv.ServType
+		servType2 := env.ServType
+		if (1<<uint8(servType1))&servType2 > 0 {
+			if servEnv, ok := mapServEnv[env.Name]; ok {
+				var stderr, stdout bytes.Buffer
+				s := fmt.Sprintf("md5sum %s/%s", servEnv.RemotePath, serv.ServName)
+				cmd := exec.Command("ssh", host.Name, s)
+				cmd.Stdout = &stdout
+				cmd.Stderr = &stderr
 
-                err := cmd.Run()
-                if err != nil {
-                    c.setError(1, fmt.Sprintf("HostName:[%s] exec[%s] failed. ", host.HostName, s))
-                    logs.Error("HostName:[%s] exec[%s] failed. Error:[%s]", host.HostName, s, stderr.String())
-                    goto end
-                }
-                vecList := strings.Split(stdout.String(), " ")
-                logs.Debug(vecList)
-                if len(vecList) > 0 {
-                    servEnv.ServMd5 = vecList[0]
-                }
-            } else {
-                servEnv := ms.ServEnv {
-                    ServName:serv.ServName,
-                    Env:env.Name}
-                    serv.ServEnvs = append(serv.ServEnvs, servEnv);
-                }
-            }
-        }
+				err := cmd.Run()
+				if err != nil {
+					c.setError(1, fmt.Sprintf("HostName:[%s] exec[%s] failed. ", host.Name, s))
+					logs.Error("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
+					goto end
+				}
+				vecList := strings.Split(stdout.String(), " ")
+				logs.Debug(vecList)
+				if len(vecList) > 0 {
+					servEnv.ServMd5 = vecList[0]
+				}
+			} else {
+				servEnv := ms.ServEnv{
+					ServName: serv.ServName,
+					Env:      env.Name}
+				serv.ServEnvs = append(serv.ServEnvs, servEnv)
+			}
+		}
+	}
 
-    //获取本地md5
-    {
-        var stderr, stdout bytes.Buffer
-        s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
-        cmd := exec.Command("/bin/bash", "-c", s)
-        cmd.Stdout = &stdout
-        cmd.Stderr = &stderr
+	//获取本地md5
+	{
+		var stderr, stdout bytes.Buffer
+		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+		cmd := exec.Command("/bin/bash", "-c", s)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
 
-        err := cmd.Run()
-        if err != nil {
-            c.setError(1, fmt.Sprintf("local exec[%s] failed. ", s))
-            logs.Error("exec[%s] failed. Error:[%s]", s, stderr.String())
-            goto end
-        }
+		err := cmd.Run()
+		if err != nil {
+			c.setError(1, fmt.Sprintf("local exec[%s] failed. ", s))
+			logs.Error("exec[%s] failed. Error:[%s]", s, stderr.String())
+			goto end
+		}
 
-        vecList := strings.Split(stdout.String(), " ")
-        logs.Debug(vecList)
-        if len(vecList) > 0 {
-            serv.ServMd5 = vecList[0]
-        }
-    }
+		vecList := strings.Split(stdout.String(), " ")
+		logs.Debug(vecList)
+		if len(vecList) > 0 {
+			serv.ServMd5 = vecList[0]
+		}
+	}
 
-    c.setData(serv)
+	c.setData(serv)
 
 end:
-    c.Data["json"] = c.GenRetJSON()
-    c.ServeJSON()
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
 }
 
-// //UpdateServsConf update conf
+//UpdateServsConf update conf
 // func (c *APIController) UpdateServsConf() {
 // 	var servconf models.ServConf
 // 	json.Unmarshal(c.Ctx.Input.RequestBody, &servconf)
@@ -207,7 +203,7 @@ end:
 // 	if len(servListOld) > 0 {
 // 		_servconf := servListOld[0]
 // 		_servconf.LocalPath = servconf.Serv.LocalPath
-// 		//_servconf.LastUpdateTime = timestr
+// 		_servconf.LastUpdateTime = timestr
 // 		logs.Debug("UpdateServ", _servconf)
 // 		err = ms.UpdateServ(ctx, nil, db, &_servconf)
 // 		if err != nil {
