@@ -96,19 +96,22 @@ CREATE TABLE IF NOT EXISTS \`t_serv_env\` (
 " >> ${CREATE_FILE_NAME}.sql
 
 echo "
-drop table t_release;
+drop table envs;
+drop table hosts;
+drop table servs;
+drop table serv_envs;
 " >> ${DROP_FILE_NAME}.sql
 
-db_connection="mysql -uauto_release -pauto_release -h10.116.153.115 -A  -s -N --default-character-set=utf8 -P3309"
+db_connection="mysql -uauto_release -pauto_release -h119.23.163.203 -A  -s -N --default-character-set=utf8 -P3309"
  
 [[ $1 == ${DROP} ]] && \
-${db_connection} db_release < ${DROP_FILE_NAME}.sql && \
+${db_connection} dev_release < ${DROP_FILE_NAME}.sql && \
 echo "fihished drop talbe in file of ${DROP}.sql" && \
 exit
 
 
 [[ $1 == ${CREATE} ]] && \
-${db_connection} db_release < ${CREATE_FILE_NAME}.sql && \
+${db_connection} dev_release < ${CREATE_FILE_NAME}.sql && \
 exit
 
 [[ $1 == ${UPDATE} ]] && \

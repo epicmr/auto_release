@@ -56,9 +56,7 @@
         data() {
             return {
                 selectedServName: '',
-                selectedServ: {
-                    serv:{}
-                },
+                selectedServ: {},
                 editdisable: true
             }
         },

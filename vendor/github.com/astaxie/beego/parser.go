@@ -459,16 +459,12 @@ func genRouterCode(pkgRealpath string) {
 			imports := ""
 			if len(c.ImportComments) > 0 {
 				for _, i := range c.ImportComments {
-					var s string
 					if i.ImportAlias != "" {
-						s = fmt.Sprintf(`
+						imports += fmt.Sprintf(`
 	%s "%s"`, i.ImportAlias, i.ImportPath)
 					} else {
-						s = fmt.Sprintf(`
+						imports += fmt.Sprintf(`
 	"%s"`, i.ImportPath)
-					}
-					if !strings.Contains(globalimport, s) {
-						imports += s
 					}
 				}
 			}
@@ -494,7 +490,7 @@ func genRouterCode(pkgRealpath string) {
             }`, filters)
 			}
 
-			globalimport += imports
+			globalimport = imports
 
 			globalinfo = globalinfo + `
     beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],

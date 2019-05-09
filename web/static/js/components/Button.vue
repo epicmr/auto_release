@@ -23,14 +23,10 @@
             Pack() {
                 console.log("pack serv")
                 let promises = [];
-                console.log(document.forms[0])
-                console.log(document.forms[0].appn)
-                let app = document.forms[0].appn;
-                console.log(app.length)
+                let app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
-                    console.log(app[i].checked)
                     if (app[i].checked){
-                        var serv_name = this.$store.state.data[app[i].value]["serv_name"]
+                        let serv_name = this.$store.state.data[i]["serv_name"]
                         console.log("pack serv", serv_name)
                         promises.push(this.$store.dispatch("Pack", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
@@ -38,11 +34,12 @@
                 return Promise.all(promises)
             },
             Trans() {
+                console.log("trans serv")
                 let promises = [];
-                var app = document.forms[0].appn;
+                var app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
                     if (app[i].checked){
-                        var serv_name = this.$store.state.data[app[i].value]["serv_name"]
+                        let serv_name = this.$store.state.data[i]["serv_name"]
                         console.log("trans serv", serv_name)
                         promises.push(this.$store.dispatch("Trans", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
@@ -50,11 +47,12 @@
                 return Promise.all(promises)
             },
             Post() {
+                console.log("post serv")
                 let promises = [];
-                var app = document.forms[0].appn;
+                var app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
                     if (app[i].checked){
-                        var serv_name = this.$store.state.data[app[i].value]["serv_name"]
+                        var serv_name = this.$store.state.data[i]["serv_name"]
                         console.log("post serv", serv_name)
                         promises.push(this.$store.dispatch("Post", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }

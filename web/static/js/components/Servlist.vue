@@ -1,12 +1,12 @@
 <template>
     <div>
         <el-checkbox-group v-model="checkedApp">
-            <el-row v-if="list_type === parseInt(app.serv_type)" v-for="app in this.$store.state.data">
+            <el-row v-if="list_type === parseInt(serv.serv_type)" v-for="serv in this.$store.state.data">
                 <el-col :span=12>
-                    <el-checkbox name="appn" :label="app.serv_name" :key="app.serv_name" style="margin-top: 10px" size="medium"></el-checkbox>
+                    <el-checkbox name="serv_list" :label="serv.serv_name" :key="serv.serv_name" style="margin-top: 10px" size="medium"></el-checkbox>
                 </el-col>
                 <el-col :span=12>
-                    <el-row v-for="time in app.serv_state">
+                    <el-row v-for="time in serv.serv_state">
                         <el-col :span=12>
                             <small>{{time.host_name}}</small>
                         </el-col>

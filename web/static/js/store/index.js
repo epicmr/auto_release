@@ -45,7 +45,7 @@ export default new Vuex.Store({
             axios
                 .get('/api/servs', {params:data})
                 .then(response => {
-                    this.state.data = response.data})
+                    this.state.data = response.data.data})
         },
         GetConfs(context) {
             axios

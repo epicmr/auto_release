@@ -14,7 +14,7 @@ import (
 
 func GenSpec(serv *ms.Serv, servenv ms.ServEnv) {
 	rpmPath := "/root/rpmbuild/SPECS/"
-	srcName := fmt.Sprintf("%s/template/TEMPLATE_%s.spec", rpmPath, serv.ServType)
+	srcName := fmt.Sprintf("%s/template/TEMPLATE_%d.spec", rpmPath, serv.ServType)
 	destName := fmt.Sprintf("%s/%s", rpmPath, serv.ServName+".spec")
 	suffix := path.Ext(serv.ServName)
 	restartArg := strings.TrimSuffix(serv.ServName, suffix)

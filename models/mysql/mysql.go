@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"time"
 	"github.com/astaxie/beego/logs"
 	"github.com/jinzhu/gorm"
 )
@@ -10,39 +11,44 @@ var (
 )
 
 type Base struct {
-	gorm.Model
+    ID          uint64 `gorm:"primary_key" json:"id"`
+    CreatedAt   time.Time `json:"-"`
+    UpdatedAt   time.Time `json:"update_at"`
+    DeletedAt   *time.Time `sql:"index" json:"-"`
 	DataVersion int `gorm:"not null;default:0;comment:'数据版本'" json:"-"`
 }
 
 type Env struct {
 	Base
-	Name     string `gorm:"size:16;not null;default:'';comment:'HOST'" json:"host_name"`
+	Name     string `gorm:"unique;size:16;not null;default:'';comment:'HOST'" json:"host_name"`
 	ServType int    `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
 	Hosts    []Host `gorm:"ForeignKey:EnvId;AssociationForeignKey:ID" json:"hosts"`
 }
 
 type Host struct {
 	Base
-	EnvID    int64  `gorm:"not null;default:0;comment:'EnvID'" json:"env_id"`
-	Name     string `gorm:"size:16;not null;default:'';comment:'HOST'" json:"name"`
+	EnvID    uint64  `gorm:"not null;default:0;comment:'EnvID'" json:"env_id"`
+	Name     string `gorm:"unique;size:16;not null;default:'';comment:'HOST'" json:"name"`
 	ServType int    `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
 }
 
 type Serv struct {
 	Base
-	ServName  string    `gorm:"size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
+	ServName  string    `gorm:"unique;size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
 	ServType  int       `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
 	LocalPath string    `gorm:"size:256;not null;default:'';comment:'本地路径'" json:"local_path"`
 	ServMd5   string    `gorm:"-" json:"serv_md5"`
-	ServEnvs  []ServEnv `gorm:"ForeignKey:ServName;AssociationForeignKey:ServName" json:"serv_envs"`
+	ServEnvs  []ServEnv `gorm:"ForeignKey:ServID;AssociationForeignKey:ID" json:"serv_envs"`
 }
 
 type ServEnv struct {
-	Base
-	ServName   string `gorm:"size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
-	Env        string `gorm:"size:32;not null;default:'';comment:'发布环境'" json:"env"`
-	RemotePath string `gorm:"size:256;not null;default:'';comment:'安装路径'" json:"remote_path"`
-	ServMd5    string `gorm:"-" json:"serv_md5"`
+    Base
+    ServID     uint64 `gorm:"not null;default:0;;comment:'服务ID'" json:"serv_id"`
+	ServName  string    `gorm:"size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
+    EnvID     uint64 `gorm:"not null;default:0;;comment:'环境ID'" json:"env_id"`
+    Env        string `gorm:"size:32;not null;default:'';comment:'发布环境'" json:"env"`
+    RemotePath string `gorm:"size:256;not null;default:'';comment:'安装路径'" json:"remote_path"`
+    ServMd5    string `gorm:"-" json:"serv_md5"`
 }
 
 type ServConf struct {
@@ -64,7 +70,7 @@ func InitDb() (*gorm.DB, error) {
 	if db != nil {
 		return db, nil
 	}
-	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(120.25.154.225:3309)/release?charset=utf8&parseTime=true")
+	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(119.23.163.203:3309)/dev_release?charset=utf8&parseTime=true")
 	if err != nil {
 		logs.Error("Mysql::Open failed. ")
 		return nil, nil

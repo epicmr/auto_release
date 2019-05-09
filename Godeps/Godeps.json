@@ -1,52 +1,52 @@
 {
 	"ImportPath": "github.com/epicmr/auto_release",
-	"GoVersion": "go1.11",
+	"GoVersion": "go1.12",
 	"GodepVersion": "v80",
 	"Deps": [
 		{
 			"ImportPath": "github.com/astaxie/beego",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/config",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/context",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/context/param",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/grace",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/logs",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/session",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/toolbox",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/astaxie/beego/utils",
-			"Comment": "v1.10.1-218-g610f27d",
-			"Rev": "610f27d6849e227d2b5ff24c5573e071207cc730"
+			"Comment": "v1.11.1",
+			"Rev": "1b6edafc96ad27b6515fafeccd7339dda3e997b1"
 		},
 		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
@@ -55,60 +55,56 @@
 		},
 		{
 			"ImportPath": "github.com/jinzhu/gorm",
-			"Comment": "v1.9.4-1-g7bc3561",
-			"Rev": "7bc35615034c1d6994088c2cc925086fba6f565e"
+			"Comment": "v1.9.7-8-gb715619",
+			"Rev": "b7156195f7f3415f97c20abbd6aff894b847fee8"
 		},
 		{
 			"ImportPath": "github.com/jinzhu/inflection",
 			"Rev": "04140366298a54a039076d798123ffa108fff46c"
 		},
 		{
-			"ImportPath": "github.com/shiena/ansicolor",
-			"Rev": "a422bbe96644373c5753384a59d678f7d261ff10"
-		},
-		{
 			"ImportPath": "golang.org/x/crypto/acme",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/acme/autocert",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/curve25519",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ed25519",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ed25519/internal/edwards25519",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/internal/chacha20",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/internal/subtle",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/poly1305",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/crypto/ssh",
-			"Rev": "d864b10871cd4370fe574816b489c819c675ccc7"
+			"Rev": "e1dfcc566284e143ba8f9afbb3fa563f2a0d212b"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/cpu",
-			"Rev": "953cdadca894cdc07be76fc99f95b40c28f06623"
+			"Rev": "2d0786266e9cd132da844109aa05016f11f3df28"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "953cdadca894cdc07be76fc99f95b40c28f06623"
+			"Rev": "2d0786266e9cd132da844109aa05016f11f3df28"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

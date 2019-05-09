@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"encoding/json"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
@@ -94,6 +95,7 @@ func (c *APIController) GetConfs() {
 				if _, ok := mapServEnv[serv.ServName+env.Name]; !ok {
 					servEnv := ms.ServEnv{
 						ServName:   serv.ServName,
+						EnvID:      env.ID,
 						Env:        env.Name,
 						RemotePath: ""}
 					servs[i].ServEnvs = append(servs[i].ServEnvs, servEnv)
@@ -187,7 +189,39 @@ end:
 }
 
 //UpdateServsConf update conf
-// func (c *APIController) UpdateServsConf() {
+func (c *APIController) UpdateServsConf() {
+    var serv ms.Serv
+    json.Unmarshal(c.Ctx.Input.RequestBody, &serv)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+    logs.Debug(serv.ServType)
+
+    for i, _ := range serv.ServEnvs {
+        serv.ServEnvs[i].ServName = serv.ServName
+    }
+
+	db, _ := ms.InitDb()
+    if serv.ID > 0 {
+        db.Debug().Save(&serv)
+    }else {
+        db.Debug().Create(&serv)
+    }
+
+    c.setData(serv)
+    c.Data["json"] = c.GenRetJSON()
+    c.ServeJSON()
+}
+
+func (c *APIController) GetServs() {
+	db, _ := ms.InitDb()
+	var servs []ms.Serv
+
+	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+
+    c.setData(servs)
+    c.Data["json"] = c.GenRetJSON()
+    c.ServeJSON()
+}
+
 // 	var servconf models.ServConf
 // 	json.Unmarshal(c.Ctx.Input.RequestBody, &servconf)
 // 	curTime := time.Now().Unix()
@@ -260,7 +294,6 @@ end:
 // }
 
 // //GetServs return servs
-// func (c *APIController) GetServs() {
 // 	env := c.GetString("env")
 // 	db, _ := ms.InitDb()
 // 	ctx := context.Background()
