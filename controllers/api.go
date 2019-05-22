@@ -25,7 +25,7 @@ func (r *JSONRetMsg) GenRetJSON() map[string]interface{} {
 	if r.m == nil {
 		r.m = make(map[string]interface{})
 	}
-	logs.Debug("Status:[%d] Message:[%s]", r.status, r.message)
+	logs.Info("Status:[%d] Message:[%s]", r.status, r.message)
 	r.m["status"] = r.status
 	r.m["message"] = r.message
 
@@ -76,9 +76,8 @@ func (c *APIController) GetConfs() {
 	var servs []ms.Serv
 
 	db.Find(&envs)
-	db.Debug().Find(&envs).GetErrors()
-	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
-	logs.Info(envs)
+	db.Find(&envs).GetErrors()
+	db.Preload("ServEnvs").Find(&servs).GetErrors()
 
 	mapServEnv := make(map[string]ms.ServEnv)
 	for _, serv := range servs {
@@ -117,10 +116,8 @@ func (c *APIController) GetConfsWithMd5() {
 	var envs []ms.Env
 	var serv ms.Serv
 
-	db.Debug().Preload("Hosts").Find(&envs).GetErrors()
-	db.Debug().Preload("ServEnvs").Where("serv_name = ?", servName).First(&serv).GetErrors()
-
-	db.Debug().Save(&serv)
+	db.Preload("Hosts").Find(&envs).GetErrors()
+	db.Preload("ServEnvs").Where("serv_name = ?", servName).First(&serv).GetErrors()
 
 	mapServEnv := make(map[string]*ms.ServEnv)
 	for i, servEnv := range serv.ServEnvs {
@@ -128,13 +125,19 @@ func (c *APIController) GetConfsWithMd5() {
 	}
 
 	for _, env := range envs {
-		host := env.Hosts[0]
 		servType1 := serv.ServType
-		servType2 := env.ServType
+	    var host ms.Host
+        for _, h := range env.Hosts {
+            if (1<<uint8(servType1))&h.ServType > 0 {
+                host = h
+            }
+        }
+		servType2 := host.ServType
 		if (1<<uint8(servType1))&servType2 > 0 {
 			if servEnv, ok := mapServEnv[env.Name]; ok {
 				var stderr, stdout bytes.Buffer
 				s := fmt.Sprintf("md5sum %s/%s", servEnv.RemotePath, serv.ServName)
+				logs.Info(host.Name)
 				cmd := exec.Command("ssh", host.Name, s)
 				cmd.Stdout = &stdout
 				cmd.Stderr = &stderr
@@ -146,7 +149,7 @@ func (c *APIController) GetConfsWithMd5() {
 					goto end
 				}
 				vecList := strings.Split(stdout.String(), " ")
-				logs.Debug(vecList)
+				logs.Info(vecList)
 				if len(vecList) > 0 {
 					servEnv.ServMd5 = vecList[0]
 				}
@@ -175,7 +178,7 @@ func (c *APIController) GetConfsWithMd5() {
 		}
 
 		vecList := strings.Split(stdout.String(), " ")
-		logs.Debug(vecList)
+		logs.Info(vecList)
 		if len(vecList) > 0 {
 			serv.ServMd5 = vecList[0]
 		}
@@ -193,7 +196,6 @@ func (c *APIController) UpdateServsConf() {
     var serv ms.Serv
     json.Unmarshal(c.Ctx.Input.RequestBody, &serv)
     logs.Info(string(c.Ctx.Input.RequestBody))
-    logs.Debug(serv.ServType)
 
     for i, _ := range serv.ServEnvs {
         serv.ServEnvs[i].ServName = serv.ServName
@@ -201,9 +203,9 @@ func (c *APIController) UpdateServsConf() {
 
 	db, _ := ms.InitDb()
     if serv.ID > 0 {
-        db.Debug().Save(&serv)
+        db.Save(&serv)
     }else {
-        db.Debug().Create(&serv)
+        db.Create(&serv)
     }
 
     c.setData(serv)
@@ -212,12 +214,25 @@ func (c *APIController) UpdateServsConf() {
 }
 
 func (c *APIController) GetServs() {
+    _env := c.GetString("env")
 	db, _ := ms.InitDb()
-	var servs []ms.Serv
+	var servs, servs1 []ms.Serv
+	var env ms.Env
+	db.Preload("Hosts").Where("name = ?", _env).Find(&env)
+	db.Preload("ServEnvs").Find(&servs).GetErrors()
 
-	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+    validServType := 0
+    for _, host := range env.Hosts {
+        validServType |= host.ServType
+    }
 
-    c.setData(servs)
+    for _, serv := range servs {
+        if (1<<uint8(serv.ServType))&validServType > 0 {
+            servs1 = append(servs1, serv)
+        }
+    }
+
+    c.setData(servs1)
     c.Data["json"] = c.GenRetJSON()
     c.ServeJSON()
 }

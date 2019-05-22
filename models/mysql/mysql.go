@@ -70,10 +70,11 @@ func InitDb() (*gorm.DB, error) {
 	if db != nil {
 		return db, nil
 	}
-	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(119.23.163.203:3309)/dev_release?charset=utf8&parseTime=true")
+	//db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true")
+	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true")
 	if err != nil {
 		logs.Error("Mysql::Open failed. ")
 		return nil, nil
 	}
-	return db, nil
+	return db.Debug(), nil
 }

@@ -14,38 +14,38 @@ func init() {
 	db.AutoMigrate(&ms.Env{}, &ms.Host{}, &ms.Serv{}, &ms.ServEnv{})
 	db.Model(&ms.ServEnv{}).AddUniqueIndex("idx_serv_env", "serv_id", "env_id")
 
-    env := ms.Env{
-        Name:     "local",
-        ServType: 14}
+    //env := ms.Env{
+    //    Name:     "stg",
+    //    ServType: 14}
 
-    db.Create(&env)
+    //db.Create(&env)
 
-    serv := ms.Serv{
-        ServName:  "deal",
-        ServType:  1,
-        LocalPath: "/data/upgrade/cgi"}
-    db.Create(&serv)
+    //serv := ms.Serv{
+    //    ServName:  "deal",
+    //    ServType:  1,
+    //    LocalPath: "/data/upgrade/cgi"}
+    //db.Create(&serv)
 
-    if env.ID > 0 {
-    logs.Info(env)
-    host := ms.Host{
-        EnvID:    env.ID,
-        Name:     "LOCAL-ALL-68",
-        ServType: 14}
+    //if env.ID > 0 {
+    //logs.Info(env)
+    //host := ms.Host{
+    //    EnvID:    env.ID,
+    //    Name:     "STG-ALL-83",
+    //    ServType: 14}
 
-    db.Create(&host)
-    }
+    //db.Create(&host)
+    //}
 
-    if serv.ID > 0 && env.ID > 0 {
-    servEnv := ms.ServEnv{
-        ServID:     serv.ID,
-        ServName:   serv.ServName,
-        EnvID:      env.ID,
-        Env:        env.Name,
-        RemotePath: "/var/www/cgi-bin/deal/"}
+    //if serv.ID > 0 && env.ID > 0 {
+    //servEnv := ms.ServEnv{
+    //    ServID:     serv.ID,
+    //    ServName:   serv.ServName,
+    //    EnvID:      env.ID,
+    //    Env:        env.Name,
+    //    RemotePath: "/var/www/cgi-bin/deal/"}
 
-    db.Create(&servEnv)
-    }
+    //db.Create(&servEnv)
+    //}
 
 	// orm.RegisterDriver("mysql", orm.DRMySQL)
 	// orm.RegisterModel(&ms.Host{})

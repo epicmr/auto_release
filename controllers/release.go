@@ -29,7 +29,7 @@ func (c *ReleaseController) Pack() {
 
 	//更新spec版本号
 	var serv ms.Serv
-	db.Debug().Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
+	db.Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
 
 	var _servenv ms.ServEnv
 	for _, servenv := range serv.ServEnvs {
@@ -73,8 +73,8 @@ func (c *ReleaseController) Trans() {
 
 	var env ms.Env
 	var serv ms.Serv
-	db.Debug().Preload("Hosts").First(&env).GetErrors()
-	db.Debug().Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
+	db.Preload("Hosts").Where("name = ?", ob.Env).First(&env).GetErrors()
+	db.Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
 
     var installRpm string
 	var stderr, stdout bytes.Buffer
@@ -127,8 +127,8 @@ func (c *ReleaseController) Post() {
 
 	var env ms.Env
 	var serv ms.Serv
-	db.Debug().Preload("Hosts").First(&env).GetErrors()
-	db.Debug().Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
+	db.Preload("Hosts").Where("name = ?", ob.Env).First(&env).GetErrors()
+	db.Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
 
 	var installRpm string
 	var stderr, stdout bytes.Buffer
@@ -154,6 +154,7 @@ func (c *ReleaseController) Post() {
 		servType2 := host.ServType
 		if (1<<uint8(servType1))&servType2 > 0 {
 			s = fmt.Sprintf("rpm -U --force %s", installRpm)
+			logs.Info(host.Name, s)
 			cmd = exec.Command("ssh", host.Name, s)
 			cmd.Stdout = &stdout
 			cmd.Stderr = &stderr

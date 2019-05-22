@@ -26,7 +26,7 @@
                 let app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
                     if (app[i].checked){
-                        let serv_name = this.$store.state.data[i]["serv_name"]
+                        let serv_name = app[i].value
                         console.log("pack serv", serv_name)
                         promises.push(this.$store.dispatch("Pack", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
@@ -39,7 +39,7 @@
                 var app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
                     if (app[i].checked){
-                        let serv_name = this.$store.state.data[i]["serv_name"]
+                        let serv_name = app[i].value
                         console.log("trans serv", serv_name)
                         promises.push(this.$store.dispatch("Trans", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
@@ -52,7 +52,7 @@
                 var app = document.forms[0].serv_list;
                 for (var i = 0; i < app.length; ++i) {
                     if (app[i].checked){
-                        var serv_name = this.$store.state.data[i]["serv_name"]
+                        let serv_name = app[i].value
                         console.log("post serv", serv_name)
                         promises.push(this.$store.dispatch("Post", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
