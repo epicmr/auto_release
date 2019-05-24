@@ -20,7 +20,7 @@ type Base struct {
 
 type Env struct {
 	Base
-	Name     string `gorm:"unique;size:16;not null;default:'';comment:'HOST'" json:"host_name"`
+	Name     string `gorm:"unique;size:16;not null;default:'';comment:'HOST'" json:"name"`
 	ServType int    `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
 	Hosts    []Host `gorm:"ForeignKey:EnvId;AssociationForeignKey:ID" json:"hosts"`
 }
@@ -70,8 +70,8 @@ func InitDb() (*gorm.DB, error) {
 	if db != nil {
 		return db, nil
 	}
-	//db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true")
-	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true")
+	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true")
+	//db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true")
 	if err != nil {
 		logs.Error("Mysql::Open failed. ")
 		return nil, nil

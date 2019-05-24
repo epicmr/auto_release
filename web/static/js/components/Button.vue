@@ -28,7 +28,7 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("pack serv", serv_name)
-                        promises.push(this.$store.dispatch("Pack", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.$store.commit("Pack", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
                 };
                 return Promise.all(promises)
@@ -41,7 +41,7 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("trans serv", serv_name)
-                        promises.push(this.$store.dispatch("Trans", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.$store.commit("Trans", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
                 };
                 return Promise.all(promises)
@@ -54,7 +54,7 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("post serv", serv_name)
-                        promises.push(this.$store.dispatch("Post", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.$store.commit("Post", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
                     }
                 }
                 return Promise.all(promises)

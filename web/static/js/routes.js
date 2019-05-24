@@ -3,8 +3,11 @@ import VueRouter from 'vue-router'
 import Home from './components/Home'
 import Welcome from './components/Welcome'
 import Release from './components/Release'
-import Conf from './components/Conf'
 import Login from './components/Login'
+import EnvConf from './components/conf/EnvConf'
+import HostConf from './components/conf/HostConf'
+import Conf from './components/conf/Conf'
+import UserRepair from './components/repair/UserRepair'
 Vue.use(VueRouter)
 
 const routes = [
@@ -24,8 +27,20 @@ const routes = [
                 component: Release
             },
             {
+                path: 'conf-env',
+                component: EnvConf
+            },
+            {
+                path: 'conf-host',
+                component: HostConf
+            },
+            {
                 path: 'conf',
                 component: Conf
+            },
+            {
+                path: 'repair-user',
+                component: UserRepair
             }
         ]
     },

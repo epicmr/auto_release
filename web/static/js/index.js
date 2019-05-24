@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip} from 'element-ui';
+import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip,Radio,RadioGroup} from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import App from './App'
 import router from './routes'
@@ -20,6 +20,8 @@ Vue.use(Option);
 Vue.use(Input);
 Vue.use(Loading);
 Vue.use(Tooltip);
+Vue.use(Radio);
+Vue.use(RadioGroup);
 
 axios.interceptors.request.use(function(config){  
     store.dispatch('ShowLoading')  

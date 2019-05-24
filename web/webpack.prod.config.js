@@ -14,7 +14,7 @@ const CompressionPlugin = require("compression-webpack-plugin");
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const ParallelUglifyPlugin = require('webpack-parallel-uglify-plugin');
 
-const devServerHost = process.env.HOST || '120.25.154.225'
+const devServerHost = process.env.HOST || '119.23.163.203'
 const devServerPort = process.env.PORT || '8000'
 
 module.exports = {
@@ -154,7 +154,7 @@ module.exports = {
         new BundleAnalyzerPlugin(
             {
                 analyzerMode: 'server',
-                analyzerHost: '120.25.154.225',
+                analyzerHost: '119.23.163.203',
                 analyzerPort: 8889,
                 reportFilename: 'report.html',
                 defaultSizes: 'parsed',

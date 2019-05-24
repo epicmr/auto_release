@@ -51,21 +51,68 @@ type APIController struct {
 	JSONRetMsg
 }
 
-//GetHosts return envs
-func (c *APIController) GetHosts() {
+//GetEnvs return envs
+func (c *APIController) GetEnvs() {
+    _info_type, _ := c.GetInt("info_type")
 	db, _ := ms.InitDb()
 
 	var envs []ms.Env
+	if (_info_type == 1) {
+        db = db.Preload("Hosts")
+    }
 	db.Find(&envs)
 
-	envMap := make(map[string][]ms.Env)
-	for _, env := range envs {
-		envMap[env.Name] = append(envMap[env.Name], env)
-	}
-
-	c.setData(envMap)
+	c.setData(envs)
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
+}
+
+//UpdateEnv update env
+func (c *APIController) UpdateEnv() {
+    var env ms.Env
+    json.Unmarshal(c.Ctx.Input.RequestBody, &env)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+
+	db, _ := ms.InitDb()
+    if env.ID > 0 {
+        db.Save(&env)
+    }else {
+        db.Create(&env)
+    }
+
+    c.setData(env)
+    c.Data["json"] = c.GenRetJSON()
+    c.ServeJSON()
+}
+
+//GetHosts return hosts
+func (c *APIController) GetHosts() {
+	db, _ := ms.InitDb()
+
+	var hosts []ms.Host
+	db.Find(&hosts)
+
+	c.setData(hosts)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//UpdateHost update host
+func (c *APIController) UpdateHost() {
+    var host ms.Host
+    json.Unmarshal(c.Ctx.Input.RequestBody, &host)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+
+	db, _ := ms.InitDb()
+    if host.ID > 0 {
+        db.Save(&host)
+    }else {
+        db.Create(&host)
+    }
+
+    c.setData(host)
+    c.Data["json"] = c.GenRetJSON()
+    c.ServeJSON()
 }
 
 //GetConfs returns confs

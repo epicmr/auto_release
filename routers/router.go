@@ -15,7 +15,10 @@ func init() {
 
 		// Handle user requests
 		beego.NSRouter("servs", &controllers.APIController{}, "get:GetServs"),
+		beego.NSRouter("envs", &controllers.APIController{}, "get:GetEnvs"),
+		beego.NSRouter("env", &controllers.APIController{}, "post:UpdateEnv"),
 		beego.NSRouter("hosts", &controllers.APIController{}, "get:GetHosts"),
+		beego.NSRouter("host", &controllers.APIController{}, "post:UpdateHost"),
 		beego.NSRouter("confs", &controllers.APIController{}, "get:GetConfs"),
 		beego.NSRouter("refresh", &controllers.APIController{}, "get:GetConfsWithMd5"),
 		beego.NSRouter("conf", &controllers.APIController{}, "post:UpdateServsConf"),

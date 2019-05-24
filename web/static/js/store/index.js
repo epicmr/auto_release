@@ -14,61 +14,86 @@ export default new Vuex.Store({
         loading: false,
         editdisable: true,
         menuvalue: "",
-        data:{},
+        envs:[],
+        hosts:[],
         confs:[],
-        result:{}
+        data:{}
     },
-    actions: {
-        ShowLoading(context){
-            this.state.loadingcount += 1;
-            console.log(this.state.loadingcount)
-            this.state.loading = true;
-            console.log(this.state.loading)
+    mutations: {
+        ShowLoading(state){
+            state.loadingcount += 1;
+            console.log(state.loadingcount)
+            state.loading = true;
+            console.log(state.loading)
         },
-        HiddenLoading(context){
-            this.state.loadingcount -= 1;
-            console.log(this.state.loadingcount)
-            if (this.state.loadingcount == 0) {
-                this.state.loading = false;
+        HiddenLoading(state){
+            state.loadingcount -= 1;
+            console.log(state.loadingcount)
+            if (state.loadingcount == 0) {
+                state.loading = false;
             }
-            console.log(this.state.loading)
+            console.log(state.loading)
         },
-        EnableEdit(context){
-            this.state.editdisable = false;
+        EnableEdit(state){
+            state.editdisable = false;
         },
-        DisableEdit(context){
-            this.state.editdisable = true;
+        DisableEdit(state){
+            state.editdisable = true;
         },
-        GetServs(context,data) {
-            this.state.menuvalue = data['env']
-            data['env'] = this.state.menuvalue
+        GetServs(state,data) {
+            state.menuvalue = data['env']
+            data['env'] = state.menuvalue
             axios
                 .get('/api/servs', {params:data})
                 .then(response => {
-                    this.state.data = response.data.data})
+                    state.data = response.data.data})
         },
-        GetConfs(context) {
+        GetEnvs(state,data) {
+            axios
+                .get('/api/envs', {params:data})
+                .then(response => {
+                    state.envs = response.data.data})
+        },
+        Env(state, data) {
+            data.hosts = null
+            axios
+                .post('/api/env', data)
+                .then(response => (state.data = response.data))
+        },
+        GetHosts(state) {
+            axios
+                .get('/api/hosts')
+                .then(response => {
+                    state.hosts = response.data.data})
+        },
+        Host(state, data) {
+            console.log(data)
+            axios
+                .post('/api/host', data)
+                .then(response => (state.data = response.data))
+        },
+        GetConfs(state) {
             axios
                 .get('/api/confs')
                 .then(response => {
-                    this.state.confs = response.data.data})
+                    state.confs = response.data.data})
         },
-        Conf(context, data) {
+        Conf(state, data) {
             axios
                 .post('/api/conf', data)
-                .then(response => (this.state.data = response.data))
+                .then(response => (state.data = response.data))
         },
-        Pack(context, serv) {
+        Pack(state, serv) {
             return axios.post('/release/pack', serv)
-                .then(response => (this.state.result = response.data))
+                .then(response => (state.data = response.data))
         },
-        Trans(context, serv) {
+        Trans(state, serv) {
             return axios.post('/release/trans', serv)
-                .then(response => (this.state.result = response.data))
+                .then(response => (state.data = response.data))
         },
-        Post(context, serv) {
+        Post(state, serv) {
             return axios.post('/release/post', serv)
-                .then(response => (this.state.result = response.data))
+                .then(response => (state.data = response.data))
         }
     }
 })
