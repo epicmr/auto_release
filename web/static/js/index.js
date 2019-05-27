@@ -24,13 +24,13 @@ Vue.use(Radio);
 Vue.use(RadioGroup);
 
 axios.interceptors.request.use(function(config){  
-    store.dispatch('ShowLoading')  
+    store.commit('ShowLoading')  
     return config  
 },function(err){  
     return Promise.reject(err)  
 });  
 axios.interceptors.response.use(function(response){  
-    store.dispatch('HiddenLoading')  
+    store.commit('HiddenLoading')  
     return response  
 },function(err){  
     return Promise.reject(err)  

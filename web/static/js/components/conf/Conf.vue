@@ -47,7 +47,7 @@
             </el-row>
 
             <el-row>
-                <el-button class="button" type="primary" @click="Conf()" :disabled="editdisable" plain>提交</el-button>
+                <el-button class="button" type="primary" @click="Submit()" :disabled="editdisable" plain>提交</el-button>
                 <el-button class="button" type="primary" @click="Refresh()" plain>刷新</el-button>
             </el-row>
         </el-col>
@@ -89,7 +89,7 @@
             DisableEdit() {
                 this.editdisable = true
             },
-            Conf() {
+            Submit() {
                 console.log(this.selected)
                 this.DisableEdit()
                 this.$store.commit("Conf", this.selected)

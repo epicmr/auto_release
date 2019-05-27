@@ -1,7 +1,7 @@
 <template>
     <div>
         <el-checkbox-group v-model="checkedApp">
-            <el-row v-if="list_type === parseInt(serv.serv_type)" v-for="serv in this.$store.state.data">
+            <el-row v-if="list_type === parseInt(serv.serv_type)" v-for="serv in this.servs">
                 <el-col :span=12>
                     <el-checkbox name="serv_list" :label="serv.serv_name" :key="serv.serv_name" style="margin-top: 10px" size="medium"></el-checkbox>
                 </el-col>
@@ -21,6 +21,8 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
+
     export default {
         name: "v-servlist",
         props : {
@@ -34,6 +36,11 @@
                 parent:this,
                 checkedApp:[]
             }
+        },
+        computed: {
+            ...mapState([
+                "servs"
+            ])
         }
     }
 </script>

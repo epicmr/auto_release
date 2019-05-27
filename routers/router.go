@@ -37,4 +37,10 @@ func init() {
 )
 
 	beego.AddNamespace(releaseNS)
+
+    releaseThirdNS := beego.NewNamespace("/third", // Handle user requests
+    beego.NSRouter("deleteUser", &controllers.ThirdController{}, "get:DeleteUser"),
+    )
+
+	beego.AddNamespace(releaseThirdNS)
 }

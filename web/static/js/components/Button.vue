@@ -12,6 +12,10 @@
 </template>
 
 <script>
+    import { mapState } from 'vuex'
+    var async = require('async');
+    require('babel-polyfill');
+
     export default {
         name: "v-button",
         data() {
@@ -19,7 +23,15 @@
                 parent:this
             }
         },
+        computed: {
+            ...mapState([
+                "menuvalue"
+            ])
+        },
         methods : {
+            Request(uri, data) {
+                return this.$http.post(uri, data)
+            },
             Pack() {
                 console.log("pack serv")
                 let promises = [];
@@ -28,7 +40,7 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("pack serv", serv_name)
-                        promises.push(this.$store.commit("Pack", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.Request('/release/pack', {"serv_name":serv_name,"env":this.menuvalue}))
                     }
                 };
                 return Promise.all(promises)
@@ -41,7 +53,7 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("trans serv", serv_name)
-                        promises.push(this.$store.commit("Trans", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.Request('/release/trans', {"serv_name":serv_name,"env":this.menuvalue}))
                     }
                 };
                 return Promise.all(promises)
@@ -54,15 +66,17 @@
                     if (app[i].checked){
                         let serv_name = app[i].value
                         console.log("post serv", serv_name)
-                        promises.push(this.$store.commit("Post", {"serv_name":serv_name,"env":this.$store.state.menuvalue}))
+                        promises.push(this.Request('/release/post', {"serv_name":serv_name,"env":this.menuvalue}))
                     }
                 }
                 return Promise.all(promises)
             },
             async OneKeyPost() {
+                this.$store.commit("ShowLoading")
                 await this.Pack()
                 await this.Trans()
                 await this.Post()
+                this.$store.commit("HiddenLoading")
             }
         }
     };

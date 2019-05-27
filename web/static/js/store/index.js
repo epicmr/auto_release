@@ -17,6 +17,7 @@ export default new Vuex.Store({
         envs:[],
         hosts:[],
         confs:[],
+        servs:[],
         data:{}
     },
     mutations: {
@@ -46,7 +47,7 @@ export default new Vuex.Store({
             axios
                 .get('/api/servs', {params:data})
                 .then(response => {
-                    state.data = response.data.data})
+                    state.servs = response.data.data})
         },
         GetEnvs(state,data) {
             axios
@@ -85,7 +86,9 @@ export default new Vuex.Store({
         },
         Pack(state, serv) {
             return axios.post('/release/pack', serv)
-                .then(response => (state.data = response.data))
+                .then(response => {
+                    state.data = response.data
+                })
         },
         Trans(state, serv) {
             return axios.post('/release/trans', serv)
@@ -93,6 +96,10 @@ export default new Vuex.Store({
         },
         Post(state, serv) {
             return axios.post('/release/post', serv)
+                .then(response => (state.data = response.data))
+        },
+        DeleteUser(state, data) {
+            return axios.get('/third/deleteUser', {params:data})
                 .then(response => (state.data = response.data))
         }
     }
