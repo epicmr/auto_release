@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"time"
 	"strings"
 	"encoding/json"
 
@@ -191,21 +192,22 @@ func (c *APIController) GetConfsWithMd5() {
 
 				err := cmd.Run()
 				if err != nil {
-					c.setError(1, fmt.Sprintf("HostName:[%s] exec[%s] failed. ", host.Name, s))
-					logs.Error("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
-					goto end
+					//c.setError(1, fmt.Sprintf("HostName:[%s] exec[%s] failed. ", host.Name, s))
+					logs.Info("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
+					continue
+					//goto end
 				}
 				vecList := strings.Split(stdout.String(), " ")
 				logs.Info(vecList)
 				if len(vecList) > 0 {
 					servEnv.ServMd5 = vecList[0]
 				}
-			} else {
-				servEnv := ms.ServEnv{
-					ServName: serv.ServName,
-					Env:      env.Name}
-				serv.ServEnvs = append(serv.ServEnvs, servEnv)
-			}
+			} //else {
+		//		servEnv := ms.ServEnv{
+		//			ServName: serv.ServName,
+		//			Env:      env.Name}
+		//		serv.ServEnvs = append(serv.ServEnvs, servEnv)
+		//	}
 		}
 	}
 
@@ -219,9 +221,9 @@ func (c *APIController) GetConfsWithMd5() {
 
 		err := cmd.Run()
 		if err != nil {
-			c.setError(1, fmt.Sprintf("local exec[%s] failed. ", s))
-			logs.Error("exec[%s] failed. Error:[%s]", s, stderr.String())
-			goto end
+			//c.setError(1, fmt.Sprintf("local exec[%s] failed. ", s))
+			logs.Info("exec[%s] failed. Error:[%s]", s, stderr.String())
+			goto step
 		}
 
 		vecList := strings.Split(stdout.String(), " ")
@@ -231,9 +233,9 @@ func (c *APIController) GetConfsWithMd5() {
 		}
 	}
 
+step:
 	c.setData(serv)
 
-end:
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
 }
@@ -284,171 +286,202 @@ func (c *APIController) GetServs() {
     c.ServeJSON()
 }
 
-// 	var servconf models.ServConf
-// 	json.Unmarshal(c.Ctx.Input.RequestBody, &servconf)
-// 	curTime := time.Now().Unix()
-// 	logs.Debug(servconf)
+func (c *APIController) CheckMD5() {
+	var ob ms.ServFlt
+	json.Unmarshal(c.Ctx.Input.RequestBody, &ob)
+	logs.Info(ob)
+	db, _ := ms.InitDb()
 
-// 	db, _ := ms.InitDb()
-// 	ctx := context.Background()
-// 	servListOld, err := ms.QueryServByName(ctx, nil, db, servconf.Serv.ServName)
-// 	if err != nil {
-// 		logs.Debug(err)
-// 	}
+	var env ms.Env
+	var serv ms.Serv
 
-// 	if len(servListOld) > 0 {
-// 		_servconf := servListOld[0]
-// 		_servconf.LocalPath = servconf.Serv.LocalPath
-// 		_servconf.LastUpdateTime = timestr
-// 		logs.Debug("UpdateServ", _servconf)
-// 		err = ms.UpdateServ(ctx, nil, db, &_servconf)
-// 		if err != nil {
-// 			logs.Debug(err)
-// 		}
-// 	} else {
-// 		_servconf := servconf.Serv
-// 		_servconf.CreateTime = curTime
-// 		_servconf.UpdateTime = curTime
-// 		logs.Debug("InsertServ", _servconf)
-// 		err = ms.InsertServ(ctx, nil, db, _servconf)
-// 		if err != nil {
-// 			logs.Debug(err)
-// 		}
-// 	}
+	db.Preload("Hosts").Where("name = ?", ob.Env).First(&env).GetErrors()
+	db.Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
 
-// 	servEnvList, err := ms.BatchQueryServEnv(ctx, nil, db)
-// 	if err != nil {
-// 		logs.Debug(err)
-// 	}
+	mapServEnv := make(map[string]*ms.ServEnv)
+	for i, servEnv := range serv.ServEnvs {
+		mapServEnv[servEnv.Env] = &serv.ServEnvs[i]
+	}
 
-// 	servEnvListMap := make(map[string]ms.ServEnv)
-// 	for _, servEnv := range servEnvList {
-// 		servEnvListMap[servEnv.ServName+servEnv.Env] = servEnv
-// 	}
+    var host ms.Host
+    servType1 := serv.ServType
+    for _, h := range env.Hosts {
+        if (1<<uint8(servType1))&h.ServType > 0 {
+            host = h
+        }
+    }
 
-// 	for _, servEnv := range servconf.ServEnvMap {
-// 		servEnvOld, ok := servEnvListMap[servEnv.ServName+servEnv.Env]
-// 		if ok {
-// 			_servenv := servEnvOld
-// 			_servenv.RemotePath = servEnv.RemotePath
-// 			_servenv.UpdateTime = curTime
-// 			logs.Debug("UpdateServEnv", _servenv)
-// 			err = ms.UpdateServEnv(ctx, nil, db, &_servenv)
-// 			if err != nil {
-// 				logs.Debug(err)
-// 			}
-// 		} else {
-// 			_servenv := servEnv
-// 			_servenv.CreateTime = curTime
-// 			_servenv.UpdateTime = curTime
-// 			logs.Debug("InsertServEnv", _servenv)
-// 			err = ms.InsertServEnv(ctx, nil, db, _servenv)
-// 			if err != nil {
-// 				logs.Debug(err)
-// 			}
-// 		}
-// 	}
+    servType2 := host.ServType
 
-// 	ms.CloseDb(db)
+	//获取本地md5
+	{
+		var stderr, stdout bytes.Buffer
+		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+		cmd := exec.Command("/bin/bash", "-c", s)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
 
-// 	c.Data["json"] = c.GenRetJSON()
-// 	c.ServeJSON()
-// }
+		err := cmd.Run()
+		if err != nil {
+            c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
+			logs.Info("exec[%s] failed. Error:[%s]", s, stderr.String())
+			goto end
+		}
 
-// //GetServs return servs
-// 	env := c.GetString("env")
-// 	db, _ := ms.InitDb()
-// 	ctx := context.Background()
-// 	servListOld, err := ms.BatchQueryServ(ctx, nil, db)
-// 	if err != nil {
-// 		logs.Debug(err)
-// 	}
+		vecList := strings.Split(stdout.String(), " ")
+		logs.Info(vecList)
+		if len(vecList) > 0 {
+			serv.ServMd5 = vecList[0]
+		}
+	}
 
-// 	hostList, err := ms.BatchQueryHost(ctx, nil, db)
-// 	if err != nil {
-// 		logs.Debug(err)
-// 	}
+    if (1<<uint8(servType1))&servType2 > 0 {
+        if servEnv, ok := mapServEnv[env.Name]; ok {
+            var stderr, stdout bytes.Buffer
+            s := fmt.Sprintf("md5sum %s/%s", servEnv.RemotePath, serv.ServName)
+            logs.Info(host.Name)
+            cmd := exec.Command("ssh", host.Name, s)
+            cmd.Stdout = &stdout
+            cmd.Stderr = &stderr
 
-// 	servEnvList, err := ms.BatchQueryServEnv(ctx, nil, db)
-// 	if err != nil {
-// 		logs.Debug(err)
-// 	}
+            err := cmd.Run()
+            if err != nil {
+                c.setError(1, fmt.Sprintf("主机[%s]服务[%s]MD5sum失败. ", host.Name, serv.ServName))
+                logs.Info("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
+                goto end
+            }
+            vecList := strings.Split(stdout.String(), " ")
+            logs.Info(vecList)
+            if len(vecList) > 0 {
+                servEnv.ServMd5 = vecList[0]
+                if serv.ServMd5 != servEnv.ServMd5 {
+                    c.setError(1, fmt.Sprintf("服务:[%s]检查MD5失败. ", ob.ServName))
+                    logs.Error("Serv:[%s] Env:[%s] Check md5sum failed. Serv:[%s] ServEnv:[%s]",
+                    ob.ServName, ob.Env, serv.ServMd5, servEnv.ServMd5)
+                    goto end
+                }
+            }
+        }
+    }
 
-// 	servType2 := 0
-// 	for _, env := range hostList {
-// 		if env.Env == env {
-// 			//servType, _ := strconv.Atoi(env.ServType)
-// 			servType := env.ServType
-// 			servType2 |= servType
-// 		}
-// 	}
+	c.setData(serv)
 
-// 	servEnvListMap := make(map[string]ms.ServEnv)
-// 	for _, servEnv := range servEnvList {
-// 		servEnvListMap[servEnv.ServName+servEnv.Env] = servEnv
-// 	}
+end:
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
 
-// 	ms.CloseDb(db)
+func (c *APIController) CheckTime() {
+	var ob ms.ServFlt
+	json.Unmarshal(c.Ctx.Input.RequestBody, &ob)
+	db, _ := ms.InitDb()
 
-// 	servMap := make(map[string]ms.Serv)
-// 	for _, serv := range servListOld {
-// 		servType1 := serv.ServType
-// 		if (1<<uint8(servType1))&servType2 > 0 {
-// 			servEnvOld, ok := servEnvListMap[serv.ServName+env]
-// 			if ok && len(servEnvOld.RemotePath) > 0 {
-// 				servMap[serv.ServName] = serv
-// 			}
-// 		}
-// 	}
+	var env ms.Env
+	var serv ms.Serv
 
-// 	for _, env := range hostList {
-// 		servType2 := env.ServType
-// 		if env.Env == env && (servType2&12) > 0 {
-// 			remote := env.HostName
-// 			logs.Debug("HostName", remote)
+	db.Preload("Hosts").Where("name = ?", ob.Env).First(&env).GetErrors()
+	db.Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
 
-// 			var stderr, stdout bytes.Buffer
-// 			var mapTime map[string]string
-// 			mapTime = make(map[string]string)
-// 			var vecDetail, vecName, vecList []string
-// 			s := fmt.Sprintf("ssh %s \"ps -eo etime,cmd |grep -v grep |grep cont_server\"", remote)
+	mapServEnv := make(map[string]*ms.ServEnv)
+	for i, servEnv := range serv.ServEnvs {
+		mapServEnv[servEnv.Env] = &serv.ServEnvs[i]
+	}
 
-// 			cmd := exec.Command("/bin/sh", "-c", s)
-// 			cmd.Stdout = &stdout
-// 			cmd.Stderr = &stderr
-// 			err = cmd.Run()
-// 			if err != nil {
-// 				//c.setError(cmd.ProcessState.Sys().(syscall.WaitStatus).ExitStatus(), "install failed. ")
-// 				logs.Error(stdout.String())
-// 				logs.Error(stderr.String())
-// 				goto end
-// 			}
+    var host ms.Host
+    servType1 := serv.ServType
+    servType2 := 0
+    for _, h := range env.Hosts {
+        if (1<<uint8(servType1))&h.ServType > 0 {
+            host = h
+            if (((1<<uint8(servType1)) & 12) > 0) {
+                var stderr, stdout bytes.Buffer
+                s := fmt.Sprintf("ps -eo lstart,cmd |grep -v grep |grep cont_server|grep -w %s", strings.TrimSuffix(ob.ServName, ".so"))
+                cmd := exec.Command("ssh", host.Name, s)
+                cmd.Stdout = &stdout
+                cmd.Stderr = &stderr
 
-// 			vecList = strings.Split(stdout.String(), "\n")
-// 			for _, detail := range vecList {
-// 				vecDetail = strings.Split(strings.TrimSpace(detail), " ")
-// 				if len(vecDetail) > 1 && strings.HasSuffix(vecDetail[1], "cont_server") {
-// 					vecName = strings.Split(vecDetail[1], "/")
-// 					if len(vecName) > 1 {
-// 						mapTime[vecName[1]] = vecDetail[0]
-// 					}
-// 				}
-// 			}
+                err := cmd.Run()
+                if err != nil {
+                    c.setError(1, fmt.Sprintf("[%s] exec[%s] failed. ", host.Name, s))
+                    logs.Error("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
+                    goto end
+                }
 
-// 			for name, serv := range servMap {
-// 				servState := ms.ServState{
-// 					HostName: env.HostName,
-// 					ServTime: mapTime[strings.TrimSuffix(serv.ServName, ".so")]}
-// 				logs.Debug(serv.ServName, servState)
-// 				//serv.ServState = append(serv.ServState, servState)
-// 				servMap[name] = serv
-// 			}
-// 			logs.Debug(len(mapTime))
-// 		}
-// 	}
-// 	logs.Debug("GetServs")
+                vecList := strings.Split(stdout.String(), "\n")
+                var runMMax int64
+                for _, detail := range vecList {
+                    vecDetail := strings.Split(strings.TrimSpace(detail), " ./")
+                    if len(vecDetail) > 1 {
+                        sec, _ := time.Parse("Mon Jan 2 15:04:05 2006", vecDetail[0])
+                        runM := (time.Now().Unix() - (sec.Unix() - 8 * 3600)) / 60
+                        if runM > runMMax {
+                            runMMax = runM
+                        }
+                        if runM > 5 {
+                            c.setError(1, fmt.Sprintf("服务[%s]启动时间[%d]分", ob.ServName, runM));
+                            logs.Error("[%s] run time [%d] m", ob.ServName, runM)
+                            goto end
+                        }
+                    }
+                }
+                logs.Info("服务[%s]启动时间[%d]分", ob.ServName, runMMax);
+            }
+        }
+    }
 
-// end:
-// 	c.Data["json"] = &servMap
-// 	c.ServeJSON()
-// }
+
+    servType2 = host.ServType
+	//获取本地md5
+	{
+		var stderr, stdout bytes.Buffer
+		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
+		cmd := exec.Command("/bin/bash", "-c", s)
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+
+		err := cmd.Run()
+		if err != nil {
+            c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
+			logs.Error("exec[%s] failed. Error:[%s]", s, stderr.String())
+			goto end
+		}
+
+		vecList := strings.Split(stdout.String(), " ")
+		if len(vecList) > 0 {
+			serv.ServMd5 = vecList[0]
+		}
+	}
+
+    if (1<<uint8(servType1))&servType2 > 0 {
+        if servEnv, ok := mapServEnv[env.Name]; ok {
+            var stderr, stdout bytes.Buffer
+            s := fmt.Sprintf("md5sum %s/%s", servEnv.RemotePath, serv.ServName)
+            cmd := exec.Command("ssh", host.Name, s)
+            cmd.Stdout = &stdout
+            cmd.Stderr = &stderr
+
+            err := cmd.Run()
+            if err != nil {
+                c.setError(1, fmt.Sprintf("主机[%s]服务[%s]MD5sum失败. ", host.Name, serv.ServName))
+                logs.Error("HostName:[%s] exec[%s] failed. Error:[%s]", host.Name, s, stderr.String())
+                goto end
+            }
+            vecList := strings.Split(stdout.String(), " ")
+            if len(vecList) > 0 {
+                servEnv.ServMd5 = vecList[0]
+                if serv.ServMd5 != servEnv.ServMd5 {
+                    c.setError(1, fmt.Sprintf("服务[%s]检查MD5失败. ", ob.ServName))
+                    logs.Error("Serv:[%s] Env:[%s] Check md5sum failed. Serv:[%s] ServEnv:[%s]",
+                    ob.ServName, ob.Env, serv.ServMd5, servEnv.ServMd5)
+                    goto end
+                }
+            }
+        }
+    }
+
+	c.setData(serv)
+
+end:
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}

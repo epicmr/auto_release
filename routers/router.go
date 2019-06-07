@@ -22,6 +22,8 @@ func init() {
 		beego.NSRouter("confs", &controllers.APIController{}, "get:GetConfs"),
 		beego.NSRouter("refresh", &controllers.APIController{}, "get:GetConfsWithMd5"),
 		beego.NSRouter("conf", &controllers.APIController{}, "post:UpdateServsConf"),
+        beego.NSRouter("checkmd5", &controllers.APIController{}, "post:CheckMD5"),
+        beego.NSRouter("checktime", &controllers.APIController{}, "post:CheckTime"),
 		//		beego.NSRouter("/users/:id([0-9]+)", &controllers.APIController{}, "get:GetUser"),
 		//		beego.NSRouter("/users", &controllers.APIController{}, "post:AddUser"),
 		//		beego.NSRouter("/users", &controllers.APIController{}, "put:UpdateUser"),

@@ -23,17 +23,13 @@ export default new Vuex.Store({
     mutations: {
         ShowLoading(state){
             state.loadingcount += 1;
-            console.log(state.loadingcount)
             state.loading = true;
-            console.log(state.loading)
         },
         HiddenLoading(state){
             state.loadingcount -= 1;
-            console.log(state.loadingcount)
             if (state.loadingcount == 0) {
                 state.loading = false;
             }
-            console.log(state.loading)
         },
         EnableEdit(state){
             state.editdisable = false;

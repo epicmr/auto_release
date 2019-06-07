@@ -8,7 +8,13 @@ import (
 
 var (
 	db *gorm.DB
+	Conn string
 )
+
+func init() {
+	//Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
+	Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
+}
 
 type Base struct {
     ID          uint64 `gorm:"primary_key" json:"id"`
@@ -68,13 +74,16 @@ type ServFlt struct {
 
 func InitDb() (*gorm.DB, error) {
 	if db != nil {
+        logs.Info("%#v", db.DB().Stats())
 		return db, nil
 	}
-	db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true")
-	//db, err := gorm.Open("mysql", "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true")
+	var err error
+	db, err = gorm.Open("mysql", Conn)
 	if err != nil {
-		logs.Error("Mysql::Open failed. ")
-		return nil, nil
+		logs.Error("Mysql::Open failed. " + err.Error())
+		return nil, err
 	}
+    db.DB().SetMaxIdleConns(100)
+    db.DB().SetMaxOpenConns(100)
 	return db.Debug(), nil
 }

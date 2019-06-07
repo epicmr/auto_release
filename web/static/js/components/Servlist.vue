@@ -1,21 +1,10 @@
 <template>
     <div>
-        <el-checkbox-group v-model="checkedApp">
-            <el-row v-if="list_type === parseInt(serv.serv_type)" v-for="serv in this.servs">
-                <el-col :span=12>
-                    <el-checkbox name="serv_list" :label="serv.serv_name" :key="serv.serv_name" style="margin-top: 10px" size="medium"></el-checkbox>
-                </el-col>
-                <el-col :span=12>
-                    <el-row v-for="time in serv.serv_state">
-                        <el-col :span=12>
-                            <small>{{time.host_name}}</small>
-                        </el-col>
-                        <el-col :span=12>
-                            <small>{{time.serv_time}}</small>
-                        </el-col>
-                    </el-row>
-                </el-col>
-            </el-row>
+        <el-row>
+            <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+        </el-row>
+        <el-checkbox-group v-model="checkedApp" v-if="list_type === parseInt(serv.serv_type)" v-for="serv in this.servs">
+            <el-checkbox name="serv_list" :label="serv.serv_name" :key="serv.serv_name" style="margin-top: 10px" size="medium"></el-checkbox>
         </el-checkbox-group>
     </div>
 </template>
@@ -34,8 +23,21 @@
         data() {
             return {
                 parent:this,
+                checkAll:false,
+                isIndeterminate:false,
                 checkedApp:[]
             }
+        },
+        methods: {
+            handleCheckAllChange(val) {
+                this.checkedApp = []
+                if (val) {
+                    for (let i in this.servs) {
+                        this.checkedApp = this.checkedApp.concat(this.servs[i].serv_name)
+                    }
+                }
+                this.isIndeterminate = false;
+            },
         },
         computed: {
             ...mapState([
