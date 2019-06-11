@@ -18,6 +18,8 @@ export default new Vuex.Store({
         hosts:[],
         confs:[],
         servs:[],
+        items:[],
+        itemstree:[],
         data:{}
     },
     mutations: {
@@ -45,6 +47,23 @@ export default new Vuex.Store({
                 .then(response => {
                     state.servs = response.data.data})
         },
+        GetAllItems(state,data) {
+            axios
+                .get('/api/items', {params:data})
+                .then(response => {
+                    state.items = response.data.data})
+        },
+        GetItemsTree(state,data) {
+            axios
+                .get('/api/itemstree', {params:data})
+                .then(response => {
+                    state.itemstree = response.data.data})
+        },
+        Item(state, data) {
+            axios
+                .post('/api/item', data)
+                .then(response => (state.data = response.data))
+        },
         GetEnvs(state,data) {
             axios
                 .get('/api/envs', {params:data})
@@ -55,6 +74,11 @@ export default new Vuex.Store({
             data.hosts = null
             axios
                 .post('/api/env', data)
+                .then(response => (state.data = response.data))
+        },
+        UserGroup(state, data) {
+            axios
+                .post('/api/usergroup', data)
                 .then(response => (state.data = response.data))
         },
         GetHosts(state) {

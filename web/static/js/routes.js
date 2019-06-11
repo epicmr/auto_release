@@ -6,7 +6,10 @@ import Release from './components/Release'
 import Login from './components/Login'
 import EnvConf from './components/conf/EnvConf'
 import HostConf from './components/conf/HostConf'
-import Conf from './components/conf/Conf'
+import RouteConf from './components/conf/RouteConf'
+import PrivConf from './components/conf/PrivConf'
+import GroupConf from './components/conf/GroupConf'
+import ServConf from './components/conf/ServConf'
 import UserRepair from './components/repair/UserRepair'
 Vue.use(VueRouter)
 
@@ -27,6 +30,10 @@ const routes = [
                 component: Release
             },
             {
+                path: 'conf-route',
+                component: RouteConf
+            },
+            {
                 path: 'conf-env',
                 component: EnvConf
             },
@@ -35,8 +42,16 @@ const routes = [
                 component: HostConf
             },
             {
-                path: 'conf',
-                component: Conf
+                path: 'conf-serv',
+                component: ServConf
+            },
+            {
+                path: 'conf-priv',
+                component: PrivConf
+            },
+            {
+                path: 'conf-group',
+                component: GroupConf
             },
             {
                 path: 'repair-user',

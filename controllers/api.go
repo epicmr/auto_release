@@ -10,8 +10,20 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
+    "github.com/casbin/casbin"
 	ms "github.com/epicmr/auto_release/models/mysql"
 )
+
+var (
+    baseObjGroup string
+    baseSubGroup string
+    E *casbin.Enforcer
+)
+
+func init() {
+    baseObjGroup = "root"
+    baseSubGroup = "base"
+}
 
 // JSONRetMsg represent return data
 type JSONRetMsg struct {
@@ -482,6 +494,116 @@ func (c *APIController) CheckTime() {
 	c.setData(serv)
 
 end:
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//UpdateItem update item
+func (c *APIController) UpdateItem() {
+    var item ms.RouteItem
+    json.Unmarshal(c.Ctx.Input.RequestBody, &item)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+    item.RouteItems = item.RouteItems[0:0]
+
+	db, _ := ms.InitDb()
+    if item.ID > 0 {
+        if item.ID == item.ParentID {
+            c.setError(1, "不能设置自己为父节点 ")
+            logs.Error("cant set itself as parent")
+            goto end
+        }
+        db.Save(&item)
+    }else {
+        db.Create(&item)
+    }
+
+    c.setData(item)
+end:
+    c.Data["json"] = c.GenRetJSON()
+    c.ServeJSON()
+}
+
+func Fill(parentID uint64, m map[uint64][]ms.RouteItem) []ms.RouteItem{
+    var items []ms.RouteItem
+    var ok bool
+    if items, ok = m[parentID]; ok {
+        for i, item := range items {
+            items[i].RouteItems = Fill(item.ID, m)
+        }
+    }
+
+    return items
+}
+
+//GetItems return items
+func (c *APIController) GetItemsTree() {
+	db, _ := ms.InitDb()
+
+	var items []ms.RouteItem
+	db.Find(&items)
+
+    m := make(map[uint64][]ms.RouteItem)
+    for _, item := range items {
+        m[item.ParentID] = append(m[item.ParentID], item)
+    }
+
+    s := Fill(0, m);
+
+	c.setData(s)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//GetItems return items
+func (c *APIController) GetAllItems() {
+	db, _ := ms.InitDb()
+
+	var items []ms.RouteItem
+	db.Find(&items)
+
+	c.setData(items)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//GetItems return items
+func (c *APIController) UpdateUserGroup() {
+    var groups []ms.UserGroup
+    json.Unmarshal(c.Ctx.Input.RequestBody, &groups)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+
+    for _, group := range groups {
+        if group.Name == "" {
+            group.Name = baseObjGroup
+        }
+        if group.Group == "" {
+            group.Group = baseSubGroup
+        }
+        E.AddNamedGroupingPolicy(group.Type, group.Name, group.Group)
+    }
+    E.SavePolicy()
+
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//GetItems return items
+func (c *APIController) UpdateGroup() {
+    var groups []ms.UserGroup
+    json.Unmarshal(c.Ctx.Input.RequestBody, &groups)
+    logs.Info(string(c.Ctx.Input.RequestBody))
+
+    for _, group := range groups {
+        if group.Name == "" {
+            group.Name = baseObjGroup
+        }
+        if group.Group == "" {
+            group.Group = baseSubGroup
+        }
+        E.AddNamedGroupingPolicy(group.Type, group.Name, group.Group)
+    }
+    E.SavePolicy()
+
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
 }

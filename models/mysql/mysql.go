@@ -57,9 +57,24 @@ type ServEnv struct {
     ServMd5    string `gorm:"-" json:"serv_md5"`
 }
 
+type RouteItem struct {
+    Base
+    ParentID     uint64 `gorm:"not null;default:0;;comment:'组ID'" json:"parent_id"`
+	Name  string    `gorm:"size:32;not null;default:'';comment:'名称'" json:"name"`
+	Idx  string    `gorm:"size:32;not null;default:'';comment:'index'" json:"index"`
+	Class  string    `gorm:"size:32;not null;default:'';comment:'图标'" json:"class"`
+	RouteItems  []RouteItem `gorm:"ForeignKey:ID;AssociationForeignKey:ParentID" json:"items"`
+}
+
 type ServConf struct {
 	Serv       Serv               `json:"serv"`
 	ServEnvMap map[string]ServEnv `json:"servenv_list"`
+}
+
+type UserGroup struct {
+	Type       string               `json:"type"`
+	Name string `json:"name"`
+	Group string `json:"group"`
 }
 
 type ServState struct {
@@ -83,6 +98,7 @@ func InitDb() (*gorm.DB, error) {
 		logs.Error("Mysql::Open failed. " + err.Error())
 		return nil, err
 	}
+    db = db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8 auto_increment=1")
     db.DB().SetMaxIdleConns(100)
     db.DB().SetMaxOpenConns(100)
 	return db.Debug(), nil
