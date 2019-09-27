@@ -11,6 +11,8 @@ import PrivConf from './components/conf/PrivConf'
 import GroupConf from './components/conf/GroupConf'
 import ServConf from './components/conf/ServConf'
 import UserRepair from './components/repair/UserRepair'
+import VipRepair from './components/repair/VipRepair'
+import CouponRepair from './components/repair/CouponRepair'
 Vue.use(VueRouter)
 
 const routes = [
@@ -56,6 +58,14 @@ const routes = [
             {
                 path: 'repair-user',
                 component: UserRepair
+            },
+            {
+                path: 'repair-vip',
+                component: VipRepair
+            },
+            {
+                path: 'repair-coupon',
+                component: CouponRepair
             }
         ]
     },

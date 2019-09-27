@@ -1,5 +1,5 @@
 <template>
-    <div class="grid-content">
+    <div>
         <form>
             <el-row>
                 <el-col :span=8>

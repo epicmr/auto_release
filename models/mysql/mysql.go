@@ -2,26 +2,27 @@ package mysql
 
 import (
 	"time"
+
 	"github.com/astaxie/beego/logs"
 	"github.com/jinzhu/gorm"
 )
 
 var (
-	db *gorm.DB
+	db   *gorm.DB
 	Conn string
 )
 
 func init() {
-	//Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
-	Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
+	Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
+	//Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
 }
 
 type Base struct {
-    ID          uint64 `gorm:"primary_key" json:"id"`
-    CreatedAt   time.Time `json:"-"`
-    UpdatedAt   time.Time `json:"update_at"`
-    DeletedAt   *time.Time `sql:"index" json:"-"`
-	DataVersion int `gorm:"not null;default:0;comment:'数据版本'" json:"-"`
+	ID          uint64     `gorm:"primary_key" json:"id"`
+	CreatedAt   time.Time  `json:"-"`
+	UpdatedAt   time.Time  `json:"update_at"`
+	DeletedAt   *time.Time `sql:"index" json:"-"`
+	DataVersion int        `gorm:"not null;default:0;comment:'数据版本'" json:"-"`
 }
 
 type Env struct {
@@ -33,7 +34,7 @@ type Env struct {
 
 type Host struct {
 	Base
-	EnvID    uint64  `gorm:"not null;default:0;comment:'EnvID'" json:"env_id"`
+	EnvID    uint64 `gorm:"not null;default:0;comment:'EnvID'" json:"env_id"`
 	Name     string `gorm:"unique;size:16;not null;default:'';comment:'HOST'" json:"name"`
 	ServType int    `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
 }
@@ -48,22 +49,22 @@ type Serv struct {
 }
 
 type ServEnv struct {
-    Base
-    ServID     uint64 `gorm:"not null;default:0;;comment:'服务ID'" json:"serv_id"`
-	ServName  string    `gorm:"size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
-    EnvID     uint64 `gorm:"not null;default:0;;comment:'环境ID'" json:"env_id"`
-    Env        string `gorm:"size:32;not null;default:'';comment:'发布环境'" json:"env"`
-    RemotePath string `gorm:"size:256;not null;default:'';comment:'安装路径'" json:"remote_path"`
-    ServMd5    string `gorm:"-" json:"serv_md5"`
+	Base
+	ServID     uint64 `gorm:"not null;default:0;;comment:'服务ID'" json:"serv_id"`
+	ServName   string `gorm:"size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
+	EnvID      uint64 `gorm:"not null;default:0;;comment:'环境ID'" json:"env_id"`
+	Env        string `gorm:"size:32;not null;default:'';comment:'发布环境'" json:"env"`
+	RemotePath string `gorm:"size:256;not null;default:'';comment:'安装路径'" json:"remote_path"`
+	ServMd5    string `gorm:"-" json:"serv_md5"`
 }
 
 type RouteItem struct {
-    Base
-    ParentID     uint64 `gorm:"not null;default:0;;comment:'组ID'" json:"parent_id"`
-	Name  string    `gorm:"size:32;not null;default:'';comment:'名称'" json:"name"`
-	Idx  string    `gorm:"size:32;not null;default:'';comment:'index'" json:"index"`
-	Class  string    `gorm:"size:32;not null;default:'';comment:'图标'" json:"class"`
-	RouteItems  []RouteItem `gorm:"ForeignKey:ID;AssociationForeignKey:ParentID" json:"items"`
+	Base
+	ParentID   uint64      `gorm:"not null;default:0;;comment:'组ID'" json:"parent_id"`
+	Name       string      `gorm:"size:32;not null;default:'';comment:'名称'" json:"name"`
+	Idx        string      `gorm:"size:32;not null;default:'';comment:'index'" json:"index"`
+	Class      string      `gorm:"size:32;not null;default:'';comment:'图标'" json:"class"`
+	RouteItems []RouteItem `gorm:"ForeignKey:ID;AssociationForeignKey:ParentID" json:"items"`
 }
 
 type ServConf struct {
@@ -72,8 +73,8 @@ type ServConf struct {
 }
 
 type UserGroup struct {
-	Type       string               `json:"type"`
-	Name string `json:"name"`
+	Type  string `json:"type"`
+	Name  string `json:"name"`
 	Group string `json:"group"`
 }
 
@@ -89,7 +90,7 @@ type ServFlt struct {
 
 func InitDb() (*gorm.DB, error) {
 	if db != nil {
-        logs.Info("%#v", db.DB().Stats())
+		logs.Info("%#v", db.DB().Stats())
 		return db, nil
 	}
 	var err error
@@ -98,8 +99,8 @@ func InitDb() (*gorm.DB, error) {
 		logs.Error("Mysql::Open failed. " + err.Error())
 		return nil, err
 	}
-    db = db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8 auto_increment=1")
-    db.DB().SetMaxIdleConns(100)
-    db.DB().SetMaxOpenConns(100)
+	db = db.Set("gorm:table_options", "ENGINE=InnoDB CHARSET=utf8 auto_increment=1")
+	db.DB().SetMaxIdleConns(100)
+	db.DB().SetMaxOpenConns(100)
 	return db.Debug(), nil
 }

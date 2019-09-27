@@ -1,15 +1,42 @@
-<template> <div class="grid-content" v-loading="this.$store.state.loading"> <el-row> <el-col :span=12> <el-input v-on:input="OnInput" v-model.number="phone" class="input" clearable> <template slot="prepend">用户ID</template>
-                    </el-input>
-                <el-col>
+<template>
+    <div v-loading="this.$store.state.loading">
+        <el-row>
+            <el-input class="input" v-on:input="OnInput" v-model.number="phone" placeholder="请输入用户手机号码" @keyup.enter.native="Query()" clearable></el-input>
+            <el-button class="button" type="primary" @click="Query()" accesskey="1">查询</el-button>
+        </el-row>
+        <div class="infowrapper" v-if="queryed">
+            <el-row class="info">
+                <el-col :span=4>
+                    <span>用户ID</span>
+                </el-col>
+                <el-col :span=4>
+                    <span>昵称</span>
+                </el-col>
+                <el-col :span=4>
+                    <span>手机</span>
+                </el-col>
+                <el-col :span=4>
+                    <span>VIP</span>
+                </el-col>
             </el-row>
-            <el-row class="input">
-                <el-button class="button" type="primary" @click="Query()" plain>查询</el-button>
-                <el-button class="button" type="primary" @click="Submit()" plain :disabled="notqueryed">删除</el-button>
+            <el-row class="info infoheight">
+                <el-col class="hold" :span=4>
+                    <span>{{userDetail.user_id}}</span>
+                </el-col>
+                <el-col class="hold" :span=4>
+                    <span>{{userDetail.nick_name}}</span>
+                </el-col>
+                <el-col class="hold" :span=4>
+                    <span>{{userDetail.mobile_phone}}</span>
+                </el-col>
+                <el-col class="hold" :span=4>
+                    <span>{{userDetail.member_level}}</span>
+                </el-col>
             </el-row>
-            <el-row>
-                <pre>{{userDetail}}</pre>
-            </el-row>
-        </el-col>
+        </div>
+        <el-row>
+            <el-button class="button" type="danger" @click="Submit()" v-if="queryed">删除</el-button>
+        </el-row>
     </div>
 </template>
 
@@ -19,12 +46,12 @@
         data() {
             return {
                 phone : '',
-                userDetail : {}
+                userDetail : ''
             }
         },
         methods: {
             OnInput(val) {
-                this.userDetail = {}
+                this.userDetail = ''
             },
             Query() {
                 this.$http
@@ -38,14 +65,12 @@
             }
         },
         computed: {
-            notqueryed : {
+            queryed : {
                 get() {
                     if (this.userDetail["status"] == "0") {
-                        console.log("false")
-                        return false
+                        return true
                     }
-                    console.log("true")
-                    return true
+                    return false
                 }
             }
         }
@@ -54,17 +79,38 @@
 
 <style scoped>
 .input {
+    margin: 5px;
+    width: 200px;
     border-radius: 4px;
-    padding: 10px 0;
-    background-color: #f9fafc;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    font-size: 14px;
 }
-pre {}
-.string { color: green; }
-.number { color: darkorange; }
-.boolean { color: blue; }
-.null { color: magenta; }
-.key { color: red; }
+.button {
+    margin: 5px;
+    border-radius: 4px;
+}
+.infowrapper
+{
+    padding: 5px;
+    border: 1px solid #D7D7D7;
+    border-radius: 5px;
+    background-color: #E4E4E4;
+    font-size: 14px;
+    margin: 5px;
+}
+.info
+{
+    padding: 5px;
+    border: 1px solid #D7D7D7;
+    border-radius: 5px;
+    background-color: white;
+    font-size: 14px;
+}
+.infoheight
+{
+    min-height: 10rem;
+}
+.hold
+{
+    height: 15px;
+}
 </style>
-

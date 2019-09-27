@@ -1,20 +1,27 @@
 <template>
-    <div id="home" class="grid-content">
-        <el-col :span="3" :offset="3">
-            <v-sidemenu></v-sidemenu>
-        </el-col>
-        <el-col :span="16" :offset="2" element-loading-text="拼命发布中" v-loading="this.$store.state.loading">
-            <router-view></router-view>
-        </el-col>
+    <div id="home" class="home">
+        <el-row>
+            <v-header></v-header>
+        </el-row>
+        <el-row>
+            <el-col :span="3" :offset="4" class="site-sidemenu">
+                <v-sidemenu></v-sidemenu>
+            </el-col>
+            <el-col :span="12" :offset="1" class="site-main" element-loading-text="拼命发布中" v-loading="this.$store.state.loading">
+                <router-view></router-view>
+            </el-col>
+        </el-row>
     </div>
 </template>
 
 <script>
 import VSidemenu from "./Sidemenu";
 import VLoading from "./Loading";
+import VHeader from "./Header";
 
 export default {
     components: {
+        VHeader,
         VLoading,
         VSidemenu
     },
@@ -30,20 +37,9 @@ export default {
 </script>
 
 <style>
-.el-row {
-    margin-bottom: 1px;
-}
-.el-col {
-    border-radius: 4px;
-}
-.bg-purple-dark {
-    background: #99a9bf;
-}
-.bg-purple {
-    background: #d3dce6;
-}
-.bg-purple-light {
-    background: #e5e9f2;
+.home {
+    width: 100%;
+    height: 100%;
 }
 .grid-content {
     border-radius: 4px;
@@ -56,6 +52,18 @@ export default {
 }
 .line-none {
     text-decoration: none;
+}
+.site-sidemenu {
+    min-height: calc(100vh - 5rem);
+    padding-top: 50px;
+    padding-bottom: 50px;
+    padding-left: 0;
+}
+.site-main {
+    min-height: calc(100vh - 5rem);
+    padding-top: 50px;
+    padding-bottom: 50px;
+    padding-right: 0;
 }
 </style>
 
