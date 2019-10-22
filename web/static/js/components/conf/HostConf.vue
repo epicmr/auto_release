@@ -16,8 +16,8 @@
                 <el-col :span=16>
                     <el-checkbox-group class="checkboxgroup" v-model="servTypeList" :disabled="editdisable">
                         <el-checkbox :label="1">CGI</el-checkbox>
-                        <el-checkbox :label="2">AO</el-checkbox>
-                        <el-checkbox :label="3">DAO</el-checkbox>
+                        <el-checkbox :label="2">DAO</el-checkbox>
+                        <el-checkbox :label="3">GO</el-checkbox>
                     </el-checkbox-group>
                     <el-select class="input" v-model="selected.env_id" filterable placeholder="请选择环境" :disabled="editdisable">
                         <el-option v-for="env in this.envs" :key="env.id" :label="env.name" :value="env.id"> </el-option>

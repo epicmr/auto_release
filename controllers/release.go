@@ -34,11 +34,12 @@ func (c *ReleaseController) Pack() {
 	var _servenv ms.ServEnv
 	for _, servenv := range serv.ServEnvs {
 		if servenv.ServName == ob.ServName &&
-			servenv.Env == ob.Env {
+			strings.ToLower(servenv.Env) == strings.ToLower(ob.Env) {
 			_servenv = servenv
 		}
 	}
 
+	logs.Info("%#v", _servenv)
 	models.GenSpec(&serv, _servenv)
 
 	//打包

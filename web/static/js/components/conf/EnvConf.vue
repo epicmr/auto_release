@@ -16,8 +16,8 @@
                 <el-col :span=16>
                     <el-checkbox-group class="checkboxgroup" v-model="servTypeList" :disabled="editdisable">
                         <el-checkbox :label="1">CGI</el-checkbox>
-                        <el-checkbox :label="2">AO</el-checkbox>
-                        <el-checkbox :label="3">DAO</el-checkbox>
+                        <el-checkbox :label="2">DAO</el-checkbox>
+                        <el-checkbox :label="3">GO</el-checkbox>
                     </el-checkbox-group>
                     <el-input v-model="selected.name" class="input" :disabled="editdisable">
                         <template slot="prepend">环境名称</template>

@@ -33,7 +33,7 @@ func GenSpec(serv *ms.Serv, servenv ms.ServEnv) {
 	var sed string
 	sed += fmt.Sprintf("sed -i 's/VERSION/%s/g' %s;", v_str, destName)
 	sed += fmt.Sprintf("sed -i 's/RELEASE/%s/g' %s;", r_str, destName)
-	sed += fmt.Sprintf("sed -i 's/FILENAME/%s/g' %s;", serv.ServName+"-"+servenv.Env, destName)
+	sed += fmt.Sprintf("sed -i 's/FILENAME/%s/g' %s;", serv.ServName+"-"+strings.ToLower(servenv.Env), destName)
 	sed += fmt.Sprintf("sed -i 's/SERVNAME/%s/g' %s;", serv.ServName, destName)
 	sed += fmt.Sprintf("sed -i 's/LOCAL_PATH/%s/g' %s;", local_path, destName)
 	sed += fmt.Sprintf("sed -i 's/REMOTE_PATH/%s/g' %s;", remote_path, destName)

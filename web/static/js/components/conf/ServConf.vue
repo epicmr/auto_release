@@ -16,8 +16,8 @@
                 <el-col :span=16>
                     <el-radio-group class="radiogroup" v-model.number="selected.serv_type" :disabled="editdisable">
                         <el-radio :label="1" type="number">CGI</el-radio>
-                        <el-radio :label="2" type="number">AO</el-radio>
-                        <el-radio :label="3" type="number">DAO</el-radio>
+                        <el-radio :label="2" type="number">DAO</el-radio>
+                        <el-radio :label="3" type="number">GO</el-radio>
                     </el-radio-group>
                     <el-input class="input" v-model="selected.serv_name" :disabled="editdisable">
                         <template slot="prepend">服务名称</template>
