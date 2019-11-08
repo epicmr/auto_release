@@ -9,8 +9,8 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
-	ms "github.com/epicmr/auto_release/models/mysql"
-	models "github.com/epicmr/auto_release/models"
+	ms "auto_release/models/mysql"
+	models "auto_release/models"
 )
 
 //ReleaseController struct

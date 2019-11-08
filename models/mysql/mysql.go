@@ -13,8 +13,8 @@ var (
 )
 
 func init() {
-	//Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
-	Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
+	Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
+	//Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
 }
 
 type Base struct {
@@ -67,6 +67,21 @@ type RouteItem struct {
 	RouteItems []RouteItem `gorm:"ForeignKey:ID;AssociationForeignKey:ParentID" json:"items"`
 }
 
+type User struct {
+    Base
+    UserID      uint64      `gorm:"not null;default:0;comment:'用户ID'" json:"user_id"`
+    Phone       string      `gorm:"size:32;not null;default:'';comment:'登录手机号'" json:"phone"`
+    Password    string      `gorm:"size:32;not null;default:'';comment:'登录密码'" json:"password"`
+    AccessLevel string      `gorm:"size:32;not null;default:'';comment:'权限等级'" json:"access_level"`
+}
+
+type UserConf struct {
+    Base
+    ServID      uint64      `gorm:"not null;default:0;comment:'ServID'" json:"serv_id"`
+    UserID      uint64      `gorm:"not null;default:0;comment:'用户ID'" json:"user_id"`
+    LocalPath   string      `gorm:"size:256;not null;default:'';comment:'本地路径'" json:"local_path"`
+}
+
 type ServConf struct {
 	Serv       Serv               `json:"serv"`
 	ServEnvMap map[string]ServEnv `json:"servenv_list"`
@@ -89,7 +104,7 @@ type ServFlt struct {
 }
 
 func InitDb() (*gorm.DB, error) {
-	if db != nil {
+    if db != nil {
 		logs.Info("%#v", db.DB().Stats())
 		return db, nil
 	}

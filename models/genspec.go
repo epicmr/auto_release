@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	ms "github.com/epicmr/auto_release/models/mysql"
+	ms "auto_release/models/mysql"
 )
 
 func GenSpec(serv *ms.Serv, servenv ms.ServEnv) {

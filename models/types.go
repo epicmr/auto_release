@@ -1,6 +1,6 @@
 package models
 
-import ms "github.com/epicmr/auto_release/models/mysql"
+import ms "auto_release/models/mysql"
 
 type ServConf struct {
 	ms.Serv

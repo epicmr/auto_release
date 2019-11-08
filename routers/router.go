@@ -1,22 +1,26 @@
 package routers
 
 import (
-	"github.com/epicmr/auto_release/controllers"
-
+	"auto_release/controllers"
 	"github.com/astaxie/beego"
 )
 
 func init() {
-	beego.DelStaticPath("/static")
-	beego.SetStaticPath("//", "web/dist")
-
-	// /api namespace
+	addFilters() 
+    beego.DelStaticPath("/static")
+	beego.SetStaticPath("/assets", "web/dist")
+    
+    beego.Router("/", &controllers.MainController{}, "get:Home")
+    beego.Router("/session/login", &controllers.MainController{}, "get:Login")
+	beego.Router("/session/login", &controllers.MainController{}, "post:Create")
+    beego.Router("/session/logout", &controllers.MainController{}, "get:Logout")
+    // /api namespace
 	apiNS := beego.NewNamespace("/api",
 
 		// Handle user requests
 		beego.NSRouter("servs", &controllers.APIController{}, "get:GetServs"),
 		beego.NSRouter("envs", &controllers.APIController{}, "get:GetEnvs"),
-		beego.NSRouter("env", &controllers.APIController{}, "post:UpdateEnv"),
+        beego.NSRouter("env", &controllers.APIController{}, "post:UpdateEnv"),
 		beego.NSRouter("itemstree", &controllers.APIController{}, "get:GetItemsTree"),
 		beego.NSRouter("items", &controllers.APIController{}, "get:GetAllItems"),
 		beego.NSRouter("item", &controllers.APIController{}, "post:UpdateItem"),
@@ -49,4 +53,8 @@ func init() {
     )
 
 	beego.AddNamespace(releaseThirdNS)
+}
+
+func addFilters() {
+    beego.InsertFilter("/*", beego.BeforeRouter, filterLoggedInUser)
 }
