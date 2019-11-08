@@ -55,14 +55,12 @@ export default {
 }
 .site-sidemenu {
     min-height: calc(100vh - 5rem);
-    padding-top: 50px;
-    padding-bottom: 50px;
+    padding-top: 30px;
     padding-left: 0;
 }
 .site-main {
     min-height: calc(100vh - 5rem);
-    padding-top: 50px;
-    padding-bottom: 50px;
+    padding-top: 30px;
     padding-right: 0;
 }
 </style>

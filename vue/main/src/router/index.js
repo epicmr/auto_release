@@ -1,26 +1,25 @@
 import Vue from 'vue'
-import VueRouter from 'vue-router'
-import Home from './components/Home'
-import Welcome from './components/Welcome'
-import Release from './components/Release'
-import Login from './components/Login'
-import EnvConf from './components/conf/EnvConf'
-import HostConf from './components/conf/HostConf'
-import RouteConf from './components/conf/RouteConf'
-import PrivConf from './components/conf/PrivConf'
-import GroupConf from './components/conf/GroupConf'
-import ServConf from './components/conf/ServConf'
-import UserRepair from './components/repair/UserRepair'
-import VipRepair from './components/repair/VipRepair'
-import CouponRepair from './components/repair/CouponRepair'
-import DealRepair from './components/repair/DealRepair'
+import Router from 'vue-router'
+import Home from '../components/Home'
+import Welcome from '../components/Welcome'
+import Release from '../components/Release'
+import EnvConf from '../components/conf/EnvConf'
+import HostConf from '../components/conf/HostConf'
+import RouteConf from '../components/conf/RouteConf'
+import PrivConf from '../components/conf/PrivConf'
+import GroupConf from '../components/conf/GroupConf'
+import ServConf from '../components/conf/ServConf'
+import UserRepair from '../components/repair/UserRepair'
+import VipRepair from '../components/repair/VipRepair'
+import CouponRepair from '../components/repair/CouponRepair'
+import DealRepair from '../components/repair/DealRepair'
 
-const originalPush = VueRouter.prototype.push;
-VueRouter.prototype.push = function push(location) {
+const originalPush = Router.prototype.push;
+Router.prototype.push = function push(location) {
   return originalPush.call(this, location).catch(err => err)
 };
 
-Vue.use(VueRouter)
+Vue.use(Router)
 
 const routes = [
     {
@@ -79,15 +78,11 @@ const routes = [
                 component: DealRepair
             }
         ]
-    },
-    {
-        path: '/login',
-        component: Login
     }
 ]
 
-const router = new VueRouter({
-     mode: 'history',
+export default new Router({
+    mode: 'history',
     routes,
     scrollBehavior (to, from, savedPosition) {
         if (savedPosition) {
@@ -96,23 +91,5 @@ const router = new VueRouter({
             return { x: 0, y: 0 }
         }
     }
-    //beforeEach(to,from,next) {
-    //    console.log('need login')
-    //    if(to.meta.requireAuth){
-    //        if (store.getters.isLogin){
-    //            next();
-    //            console.log('dont need login')
-    //        }else {
-    //            next({
-    //                path : '/login',
-    //                query : {redirect : to.fullPath}
-    //            })
-    //            console.log('need login')
-    //        }
-    //    }else {
-    //        next()
-    //    }
-    //}
 })
 
-export default router

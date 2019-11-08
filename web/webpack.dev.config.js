@@ -13,7 +13,7 @@ const devServerHost = process.env.HOST || '120.25.154.225'
 const devServerPort = process.env.PORT || '8000'
 
 module.exports = {
-    entry: [__dirname + "/static/js/polyfill.min.js", __dirname + "/static/js/index.js"],
+    entry: __dirname + "/static/js/index.js",
     output: {
             path: __dirname + "/dist",
             filename: "bundle.js"

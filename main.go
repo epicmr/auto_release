@@ -5,10 +5,12 @@ import (
 
 	"github.com/astaxie/beego/context"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
 	ms "auto_release/models/mysql"
 	_ "auto_release/routers"
+
+	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/plugins/cors"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -30,6 +32,13 @@ func init() {
 }
 
 func main() {
+	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin", "Access-Control-Allow-Headers", "Content-Type"},
+		AllowCredentials: true,
+	}))
 	//beego.InsertFilter("/*", beego.BeforeRouter, FilterUser)
 	//beego.BConfig.WebConfig.ViewsPath = "dist"
 	logs.SetLogger("file", `{"filename":"logs/log.log"}`)

@@ -19,9 +19,6 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.site-header
-    height: 5rem;
-    margin: 0 auto;
-    border-bottom: 1px solid #dcdfe6;
+<style lang="css" scoped>
+    @import "../assets/css/Header.scss";
 </style>

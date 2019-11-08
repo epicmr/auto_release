@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip,Radio,RadioGroup,MessageBox,Message,Tag} from 'element-ui';
+import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip,Radio,RadioGroup,MessageBox,Message,Tag,Table,TableColumn,Form,FormItem,Pagination} from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import App from './App'
 import router from './routes'
@@ -23,6 +23,11 @@ Vue.use(Tooltip);
 Vue.use(Radio);
 Vue.use(RadioGroup);
 Vue.use(Tag);
+Vue.use(Table);
+Vue.use(TableColumn);
+Vue.use(Form);
+Vue.use(FormItem);
+Vue.use(Pagination);
 Vue.prototype.$msgbox = MessageBox;
 Vue.prototype.$message = Message;
 
@@ -30,14 +35,20 @@ axios.interceptors.request.use(function(config){
     store.commit('ShowLoading')  
     return config  
 },function(err){  
-    return Promise.reject(err)  
+    return promise.reject(err)  
 });  
-axios.interceptors.response.use(function(response){  
+axios.interceptors.response.use((response) => {
     store.commit('HiddenLoading')  
+        console.log("yyy")
     return response  
-},function(err){  
-    return Promise.reject(err)  
-}); 
+}, function (err) {
+    if (302 === err.response.status) {
+        console.log("xxx")
+        window.location = '/login';
+    } else {
+        return promise.reject(err);
+    }
+});
 
 new Vue({
   el: '#app',
