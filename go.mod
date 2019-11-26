@@ -9,5 +9,6 @@ require (
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/jinzhu/gorm v1.9.11
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644 // indirect
+	github.com/wumansgy/goEncrypt v0.0.0-20190822060801-cf9a6f8787e4
 	golang.org/x/crypto v0.0.0-20191029031824-8986dd9e96cf
 )
