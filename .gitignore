@@ -21,3 +21,4 @@ dist
 logs
 .cache
 auto_release
+tmp/session/*
