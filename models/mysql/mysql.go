@@ -43,7 +43,7 @@ type Serv struct {
 	Base
 	ServName  string    `gorm:"unique;size:32;not null;default:'';comment:'服务名称'" json:"serv_name"`
 	ServType  int       `gorm:"not null;default:0;comment:'服务类型'" json:"serv_type"`
-	LocalPath string    `gorm:"size:256;not null;default:'';comment:'本地路径'" json:"local_path"`
+	LocalPath string    `gorm:"-" json:"local_path"`
 	ServMd5   string    `gorm:"-" json:"serv_md5"`
 	ServEnvs  []ServEnv `gorm:"ForeignKey:ServID;AssociationForeignKey:ID" json:"serv_envs"`
 }

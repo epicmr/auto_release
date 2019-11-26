@@ -4,7 +4,7 @@
     <div class="columns is-centered">
       <div class="column is-one-third">
         <header class="has-text-centered">
-          <h1 class="title is-2">欢迎登陆auto_release系统</h1>
+          <h1 class="title is-2">欢迎登陆xxx系统</h1>
         </header>
       </div>
     </div>

@@ -21,16 +21,31 @@ type ReleaseController struct {
 
 // Pack returns a list of users
 func (c *ReleaseController) Pack() {
-	var ob ms.ServFlt
-	json.Unmarshal(c.Ctx.Input.RequestBody, &ob)
-	logs.Info(ob)
-
+    logs.Info("Pack() begin")
+	var ob          ms.ServFlt
+    var user        ms.User
+    var userConf    ms.UserConf
+    var servFlt     ms.Serv
+    json.Unmarshal(c.Ctx.Input.RequestBody, &ob)
+    logs.Info("解析json参数: serv.ServName[%v], serv.Env[%v]", ob.ServName, ob.Env)
+    phone := c.GetSession("current_user")
+    logs.Info("current_user phone [%v]", phone)
 	db, _ := ms.InitDb()
+    db.Debug().Where("phone = ?", phone).Find(&user)
+    db.Debug().Where("serv_name = ?", ob.ServName).First(&servFlt)
+    db.Debug().Where("user_id = ? AND serv_id = ?", user.UserID, servFlt.ID).Find(&userConf)
 
 	//更新spec版本号
 	var serv ms.Serv
-	db.Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
-
+	db.Debug().Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
+    if ob.Env == "local" {
+        serv.LocalPath = userConf.LocalPath
+        logs.Info("local环境，修改localPath为用户当前配置的路径。[%v]", serv.LocalPath)
+    } else {
+        logs.Info("其他环境，不修改localPath.[%v]", serv.LocalPath)
+    }
+//select * from servs where serv_name = dao_mix.so limit 1
+//select * from serv_envs where serv_id in (14)
 	var _servenv ms.ServEnv
 	for _, servenv := range serv.ServEnvs {
 		if servenv.ServName == ob.ServName &&

@@ -24,7 +24,7 @@ var FilterUser = func(ctx *context.Context) {
 
 func init() {
 	db, _ := ms.InitDb()
-	db.AutoMigrate(&ms.Env{}, &ms.Host{}, &ms.Serv{}, &ms.ServEnv{}, &ms.RouteItem{}, &ms.User{}, &ms.UserConf{})
+	db.AutoMigrate(&ms.Env{}, &ms.Host{}, &ms.ServEnv{}, &ms.RouteItem{}, &ms.User{}, &ms.UserConf{})
 	db.Model(&ms.ServEnv{}).AddUniqueIndex("idx_serv_env", "serv_id", "env_id")
 	db.Model(&ms.RouteItem{}).AddUniqueIndex("idx_parentid_name", "parent_id", "name")
 	//a := gormadapter.NewAdapterByDB(db)

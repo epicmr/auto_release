@@ -8,10 +8,11 @@ import (
 	"strings"
 	"time"
 
+	ms "auto_release/models/mysql"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/casbin/casbin"
-	ms "auto_release/models/mysql"
 )
 
 var (
@@ -132,25 +133,12 @@ func (c *APIController) UpdateHost() {
 func (c *APIController) GetConfs() {
 	db, _ := ms.InitDb()
 
-	var envs        []ms.Env
-	var servs       []ms.Serv
-    var user        ms.User
-    var userConfs   []ms.UserConf
+	var envs []ms.Env
+	var servs []ms.Serv
 	db.Find(&envs)
-    phone := c.GetSession("current_user")
-    logs.Info("==============current_user_phone: [%v]", phone)
-    db.Where("phone = ?", phone).Find(&user)
-    logs.Info("userID: [%v]", user.UserID)
-    db.Where("user_id = ?", user.UserID).Find(&userConfs)
-    var servIDs []uint64
-    for _, userConf := range userConfs {
-        logs.Info("ServID: [%v], LocalPath: [%v]", userConf.ServID, userConf.LocalPath)
-        servIDs = append(servIDs, userConf.ServID)
-    }
-    logs.Info("ServIDs: [%v]", servIDs)
-	db.Debug().Preload("ServEnvs").Where("id IN (?)", servIDs).Find(&servs).GetErrors()
+	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
 
-    mapServEnv := make(map[string]ms.ServEnv)
+	mapServEnv := make(map[string]ms.ServEnv)
 	for _, serv := range servs {
 		for _, servEnv := range serv.ServEnvs {
 			mapServEnv[serv.ServName+servEnv.Env] = servEnv
@@ -173,14 +161,13 @@ func (c *APIController) GetConfs() {
 			}
 		}
 	}
-    for i, serv := range servs {
-        for j, userConf := range userConfs {
-            if serv.Base.ID == userConf.ServID {
-                servs[i].LocalPath = userConfs[j].LocalPath
-                logs.Info("ID[%v], Name[%v], 匹配成功，修改localPath [%v]", servs[i].Base.ID, servs[i].ServName, servs[i].LocalPath)
-            }
-        }
-    }
+
+	//修改localpath显示为用户自己设定的本地目录
+	c.ModifyLocalPath(servs)
+	for i, _ := range servs {
+		logs.Info("ID[%v], Name[%v],localPath [%v]", servs[i].ID, servs[i].ServName, servs[i].LocalPath)
+	}
+
 	c.setData(servs)
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
@@ -272,35 +259,36 @@ step:
 
 //UpdateServsConf update conf
 func (c *APIController) UpdateServsConf() {
-	var serv        ms.Serv
-    var userconf    ms.UserConf
-    var user        ms.User
+	var serv ms.Serv
+	var userconf ms.UserConf
+	var user ms.User
 	json.Unmarshal(c.Ctx.Input.RequestBody, &serv)
 	logs.Info(string(c.Ctx.Input.RequestBody))
 	for i, _ := range serv.ServEnvs {
 		serv.ServEnvs[i].ServName = serv.ServName
-    }
+	}
 	db, _ := ms.InitDb()
 	if serv.ID > 0 {
-        logs.Info("==========原本的操作, 更新")
 		db.Debug().Save(&serv)
 
 	} else {
-        logs.Info("=========原本的操作，创建")
 		db.Debug().Create(&serv)
 	}
-    phone := c.GetSession("current_user")
-    db.Where("phone = ?", phone).Find(&user)
-    //新增服务没有serv_id,需要插入后再分配，通过查询后重新更新一下serv
-    userconf.LocalPath = serv.LocalPath
-    db.Debug().Where("serv_name = ?", serv.ServName).First(&serv)
-    if db.Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).First(&userconf).RecordNotFound() {    //创建
-        userconf.UserID = user.UserID
-        userconf.ServID = serv.ID
-        db.Debug().Create(&userconf)
-    } else {    //更新
-        db.Debug().Model(&userconf).Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).Update("local_path", serv.LocalPath)
-    }
+
+	//更新用户对应的user_conf表
+	phone := c.GetSession("current_user")
+	db.Where("phone = ?", phone).Find(&user)
+	userconf.LocalPath = serv.LocalPath
+	logs.Info("json.local_path:[%v], userconf.LocalPath:[%v]", c.GetString("local_path"), userconf.LocalPath)
+	//新增服务传进来的json没有serv_id,需要插入后数据库再分配，通过查询后重新更新一下serv
+	db.Debug().Where("serv_name = ?", serv.ServName).First(&serv)
+	if db.Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).First(&userconf).RecordNotFound() { //创建
+		userconf.UserID = user.UserID
+		userconf.ServID = serv.ID
+		db.Debug().Create(&userconf)
+	} else { //更新
+		db.Debug().Model(&userconf).Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).Update("local_path", serv.LocalPath)
+	}
 
 	c.setData(serv)
 	c.Data["json"] = c.GenRetJSON()
@@ -310,20 +298,20 @@ func (c *APIController) UpdateServsConf() {
 func (c *APIController) GetServs() {
 	_env := c.GetString("env")
 	db, _ := ms.InitDb()
-	var servs, servs1   []ms.Serv
-	var env             ms.Env
-    var user            ms.User
-    var userConfs       []ms.UserConf
-    var servIDs         []uint64
-    phone := c.GetSession("current_user")
-    db.Where("phone = ?", phone).Find(&user)
-    db.Where("user_id = ?", user.UserID).Find(&userConfs)
-    for _, userConf := range userConfs {
-        servIDs = append(servIDs, userConf.ServID)
-    }
+	var servs, servs1 []ms.Serv
+	var env ms.Env
+	/*var user            ms.User
+	  var userConfs       []ms.UserConf
+	  var servIDs         []uint64
+	  phone := c.GetSession("current_user")
+	  db.Where("phone = ?", phone).Find(&user)
+	  db.Where("user_id = ?", user.UserID).Find(&userConfs)
+	  for _, userConf := range userConfs {
+	      servIDs = append(servIDs, userConf.ServID)
+	  }*/
 	db.Preload("Hosts").Where("name = ?", _env).Find(&env)
-	db.Debug().Preload("ServEnvs").Where("id IN (?)", servIDs).Find(&servs).GetErrors()
-    
+	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
+
 	validServType := 0
 	for _, host := range env.Hosts {
 		validServType |= host.ServType
@@ -581,22 +569,16 @@ func (c *APIController) GetItemsTree() {
 	db, _ := ms.InitDb()
 
 	var items []ms.RouteItem
-    var user ms.User
-    phone := c.GetSession("current_user")
-    db.Where("phone = ?", phone).Find(&user)
-    logs.Info("user:[%v]", user)
-    var accesslevel []string
-    accesslevel = strings.Split(user.AccessLevel, ";") 
-    logs.Info("===========accesslevel:[%v]", accesslevel)
-    db.Where("parent_id = ?", "0").Or("id IN (?)", accesslevel).Find(&items)
-    m := make(map[uint64][]ms.RouteItem)
+	accesslevel := c.GetAccessLevel()
+	db.Where("parent_id = ?", "0").Or("id IN (?)", accesslevel).Find(&items)
+	m := make(map[uint64][]ms.RouteItem)
 	for _, item := range items {
 		m[item.ParentID] = append(m[item.ParentID], item)
 	}
 
 	s := Fill(0, m)
 
-    c.setData(s)
+	c.setData(s)
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
 }
@@ -607,7 +589,7 @@ func (c *APIController) GetAllItems() {
 
 	var items []ms.RouteItem
 	db.Find(&items)
-    c.setData(items)
+	c.setData(items)
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
 }
@@ -652,4 +634,63 @@ func (c *APIController) UpdateGroup() {
 
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
+}
+
+func (c *APIController) ModifyLocalPath(servs []ms.Serv) {
+	var user ms.User
+	var userConfs []ms.UserConf
+	db, _ := ms.InitDb()
+	phone := c.GetSession("current_user")
+	logs.Info("==============current_user_phone: [%v]", phone)
+	db.Where("phone = ?", phone).First(&user)
+	logs.Info("userID: [%v]", user.UserID)
+	db.Where("user_id = ?", user.UserID).Find(&userConfs)
+	for i, serv := range servs {
+		for j, userConf := range userConfs {
+			if serv.ID == userConf.ServID {
+				servs[i].LocalPath = userConfs[j].LocalPath
+				logs.Info("ID[%v], Name[%v], 匹配成功，修改localPath [%v]", servs[i].ID, servs[i].ServName, servs[i].LocalPath)
+			}
+		}
+	}
+}
+
+//Grant permission to user
+func (c *APIController) Grant() {
+	var user ms.User
+	db, _ := ms.InitDb()
+	json.Unmarshal(c.Ctx.Input.RequestBody, &user)
+	//先记录更新的权限，否则下面查询用户操作会覆盖user.AccessLevel
+	accessLevel := user.AccessLevel
+	if user.AccessLevel == "" || (user.UserID == 0 && user.Phone == "") {
+		c.setError(2, "授权失败，缺少参数")
+		logs.Error("授权失败，缺少参数")
+		goto end
+	}
+	if db.Debug().Where("user_id = ? OR phone = ? ", user.UserID, user.Phone).First(&user).RecordNotFound() {
+		c.setError(2, "授权失败！请先注册，再授权")
+		logs.Error("授权失败，用户未注册")
+		goto end
+	}
+	//开始授权
+	db.Debug().Model(&user).Update("access_level", accessLevel)
+	user.Password = ""
+	c.setData(user)
+end:
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}
+
+//获取用户accesslevel字段
+func (c *APIController) GetAccessLevel() []string {
+	db, _ := ms.InitDb()
+
+	var user ms.User
+	phone := c.GetSession("current_user")
+	db.Where("phone = ?", phone).Find(&user)
+	logs.Info("user:[%v]", user)
+	var accesslevel []string
+	accesslevel = strings.Split(user.AccessLevel, ";")
+	logs.Info("===========accesslevel:[%v]", accesslevel)
+	return accesslevel
 }
