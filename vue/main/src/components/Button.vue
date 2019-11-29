@@ -158,11 +158,11 @@
                         console.info("%c [axiso catch error]", "color:orange", err)
                     });
             },
-            OneKeyPost() {
+            async OneKeyPost() {
                 this.$store.commit("ShowLoading")
-                this.Pack()
-                this.Trans()
-                this.Post()
+                await this.Pack()
+                await this.Trans()
+                await this.Post()
                 this.$store.commit("HiddenLoading")
             }
         }

@@ -3,6 +3,8 @@ import Vuex from 'vuex'
 import axios from 'axios'
 
 var instance = axios
+const debug = process.env.NODE_ENV !== 'production'
+
 if (debug) {
     instance = axios.create({
         baseURL: 'http://beta-cgi.gstyun.cn:5480/',
@@ -13,8 +15,6 @@ if (debug) {
 
 Vue.prototype.$http = instance
 Vue.use(Vuex)
-
-const debug = process.env.NODE_ENV !== 'production'
 
 function handleErr(err) {
     console.log(err)

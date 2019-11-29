@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip,Radio,RadioGroup,MessageBox,Message,Tag,Table,TableColumn,Form,FormItem,Pagination} from 'element-ui';
+import {Button,Checkbox,CheckboxGroup,Col,Row,Menu,Submenu,MenuItem,Select,Option,Input,Loading,Tooltip,Radio,RadioGroup,MessageBox,Message,Tag,Table,TableColumn,Form,FormItem,Pagination,Tree} from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import App from './App'
 import router from './router'
@@ -28,6 +28,7 @@ Vue.use(TableColumn);
 Vue.use(Form);
 Vue.use(FormItem);
 Vue.use(Pagination);
+Vue.use(Tree);
 Vue.prototype.$msgbox = MessageBox;
 Vue.prototype.$message = Message;
 Vue.prototype.$prompt = MessageBox.prompt;
@@ -73,12 +74,15 @@ axios.interceptors.request.use(function(config){
     console.log("request err")
     return promise.reject(err)  
 });  
+
 axios.interceptors.response.use((response) => {
     store.commit('HiddenLoading')  
+    console.log("response")
     return response  
 }, function (err) {
-    if (302 === err.response.status) {
-        window.location = '/login';
+    if (401 === err.response.status) {
+        console.log("response 401")
+        window.location = '/';
     } else {
         console.log("response err")
         return promise.reject(err);
