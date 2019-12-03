@@ -275,19 +275,22 @@ func (c *APIController) UpdateServsConf() {
 		db.Debug().Create(&serv)
 	}
 
+	//备份更新的路径，防止后面查询等操作会丢失。
+	LocalPathBak := serv.LocalPath
+
 	//更新用户对应的user_conf表
 	phone := c.GetSession("current_user")
 	db.Where("phone = ?", phone).Find(&user)
-	userconf.LocalPath = serv.LocalPath
-	logs.Info("json.local_path:[%v], userconf.LocalPath:[%v]", c.GetString("local_path"), userconf.LocalPath)
-	//新增服务传进来的json没有serv_id,需要插入后数据库再分配，通过查询后重新更新一下serv
+	//新增服务传进来的json没有serv_id,需要插入后数据库再分配，所以通过查询后重新更新一下serv
 	db.Debug().Where("serv_name = ?", serv.ServName).First(&serv)
+
 	if db.Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).First(&userconf).RecordNotFound() { //创建
+		userconf.LocalPath = LocalPathBak
 		userconf.UserID = user.UserID
 		userconf.ServID = serv.ID
 		db.Debug().Create(&userconf)
 	} else { //更新
-		db.Debug().Model(&userconf).Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).Update("local_path", serv.LocalPath)
+		db.Debug().Model(&userconf).Where("serv_id = ? AND user_id = ?", serv.ID, user.UserID).Update("local_path", LocalPathBak)
 	}
 
 	c.setData(serv)
@@ -300,15 +303,6 @@ func (c *APIController) GetServs() {
 	db, _ := ms.InitDb()
 	var servs, servs1 []ms.Serv
 	var env ms.Env
-	/*var user            ms.User
-	  var userConfs       []ms.UserConf
-	  var servIDs         []uint64
-	  phone := c.GetSession("current_user")
-	  db.Where("phone = ?", phone).Find(&user)
-	  db.Where("user_id = ?", user.UserID).Find(&userConfs)
-	  for _, userConf := range userConfs {
-	      servIDs = append(servIDs, userConf.ServID)
-	  }*/
 	db.Preload("Hosts").Where("name = ?", _env).Find(&env)
 	db.Debug().Preload("ServEnvs").Find(&servs).GetErrors()
 
