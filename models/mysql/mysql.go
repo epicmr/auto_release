@@ -13,8 +13,8 @@ var (
 )
 
 func init() {
-	Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
-	//Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
+	//Conn = "auto_release:auto_release@tcp(localhost:3309)/dev_release?charset=utf8&parseTime=true"
+	Conn = "auto_release:auto_release@tcp(localhost:3309)/run_release?charset=utf8&parseTime=true"
 }
 
 type Base struct {
@@ -101,6 +101,11 @@ type ServState struct {
 type ServFlt struct {
 	Env      string `json:"env"`
 	ServName string `json:"serv_name"`
+}
+
+type LoginRequest struct {
+	Phone  string `json:"phone"`
+	Passwd string `json:"passwd"`
 }
 
 func InitDb() (*gorm.DB, error) {

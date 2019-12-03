@@ -33,9 +33,9 @@
                 </el-table-column>
                 <el-table-column label="医生姓名" :width="76" prop="doctor_name" type="text" :formatter="pData" show-overflow-tooltip>
                 </el-table-column>
-                <el-table-column label="订单状态" :width="76" prop="deal_state" type="text" :formatter="pData" show-overflow-tooltip>
+                <el-table-column label="订单状态" :width="120" prop="deal_state" type="text" :formatter="pData" show-overflow-tooltip>
                     <template slot-scope="props">
-                        <el-tag type="success" class="tag" effect="dark">{{props.row.deal_state}}</el-tag>
+                        <el-tag type="success" class="tag" effect="dark">{{dealState[props.row.deal_state]}}</el-tag>
                     </template>
                 </el-table-column>
                 <el-table-column label="应收金额" :width="76" prop="receivable_price" type="price" :formatter="pData" show-overflow-tooltip>
@@ -118,6 +118,55 @@ export default {
                 9:"贵细订单",
                 10:"会员订单",
                 11:"补代煎单"
+            },
+            dealState:{
+                1: "处方待录入",
+                2: "处方已录入",
+                3: "医生已确认",
+                4: "患者已确认",
+                5: "已支付",
+                6: "无用",
+                7: "已调剂",
+                8: "已发药",
+                9: "拍照处方患者已收货",
+                10: "未知",
+                11: "交易结束",
+                12: "退款中",
+                13: "交易取消",
+                14: "已到店",
+                15: "已爽约",
+                16: "待支付",
+                17: "预约成功",
+                18: "已取消",
+                19: "退款成功",
+                20: "已退号",
+                21: "已预约",
+                22: "已支付",
+                23: "已取号",
+                24: "应诊",
+                25: "已就诊",
+                26: "已取消",
+                27: "已退号(退款中)",
+                28: "已退号(已退款)",
+                29: "已爽约",
+                30: "待支付",
+                31: "待发货",
+                32: "已发货",
+                33: "已签收",
+                34: "已取消",
+                35: "已失效",
+                40: "待支付",
+                41: "已支付",
+                42: "已取消",
+                43: "发起退款",
+                44: "已完成退款",
+                45: "待支付",
+                46: "已支付",
+                47: "已取消",
+                48: "发起退款",
+                49: "已完成退款",
+                50: "待支付",
+                51: "已支付"
             }
         }
     },
@@ -133,7 +182,7 @@ export default {
         checkOperation(deal) {
             if (deal.cancel_time > 0) 
                 return  0
-            else if (deal.deal_type == 3 || deal.deal_type == 4)
+            else if (deal.deal_type == 4)
                 if (deal.arrived_time > 0)
                     return 1//退号
                 else
@@ -180,16 +229,51 @@ export default {
                     console.info("%c [axiso catch error]", "color:orange", err)
                 });
         },
-        refund(deal) {
+        async refund(deal, value) {
+            let payload = {}
+            await this.$http
+                .post('https://cas.360gst.com/api/getUsers', {"employee_id":value})
+                .then(response => {
+                    if (parseInt(response.data.status, 10) == 0) {
+                        let data = response.data.data
+                        payload["operator_id"] = data.cas_id + ""
+                        payload["operator_no"] = data.employee_id
+                        payload["operator_name"] = data.name
+                    }
+                })
+                .catch(err => {
+                    console.info("%c [axiso catch error]", "color:orange", err)
+                });
+
             let t = this.checkOperation(deal)
+            let url = ""
             if (t === 1) {
                 console.log("退号")
+                url = "http://cgi.gstyun.cn/cgi-bin/deal/registrationwithdrawing"
             } else if (t === 2 || t === 3) {
                 console.log("退款")
-            } else if (t === 4)
+                url = "http://cgi.gstyun.cn/cgi-bin/deal/cancelandwxrefund"
+            } else if (t === 4) {
                 console.log("回滚")
+                url = "http://cgi.gstyun.cn/cgi-bin/deal/rollback"
+            }
             else{
             }
+
+            payload["deal_id"] = deal.deal_id
+            payload["user_id"] = deal.user_id
+
+            console.log(payload)
+            await this.$http
+                .post(url, payload)
+                .then(response => {
+                    if (parseInt(response.data.status, 10) == 0) {
+                        let data = response.data.data
+                    }
+                })
+                .catch(err => {
+                    console.info("%c [axiso catch error]", "color:orange", err)
+                });
         },
         submit(deal) {
             this.$prompt('请输入工号', '提示', {
@@ -197,7 +281,7 @@ export default {
                 cancelButtonText: '取消',
                 inputErrorMessage: '工号不正确'
             }).then(({ value }) => {
-                this.refund(deal)
+                this.refund(deal, value)
                 this.$message({
                     type: 'success',
                     message: '操作人工号: ' + value
@@ -214,7 +298,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .filter {
     margin: 5px;
     border-radius: 4px;

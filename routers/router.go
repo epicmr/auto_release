@@ -11,11 +11,10 @@ func init() {
 	beego.DelStaticPath("/static")
 	beego.SetStaticPath("/static", "vue/main/dist/static")
 
-	beego.Router("/", &controllers.MainController{}, "get:Home")
 	beego.Router("/session/login", &controllers.MainController{}, "get:Login")
 	beego.Router("/session/login", &controllers.MainController{}, "post:Create")
 	beego.Router("/session/logout", &controllers.MainController{}, "get:Logout")
-    beego.Router("/session/register", &controllers.MainController{}, "post:Register")
+	beego.Router("/session/register", &controllers.MainController{}, "post:Register")
 	// /api namespace
 	apiNS := beego.NewNamespace("/api",
 
@@ -34,8 +33,8 @@ func init() {
 		beego.NSRouter("checkmd5", &controllers.APIController{}, "post:CheckMD5"),
 		beego.NSRouter("checktime", &controllers.APIController{}, "post:CheckTime"),
 		beego.NSRouter("usergroup", &controllers.APIController{}, "post:UpdateUserGroup"),
-        beego.NSRouter("grant", &controllers.APIController{}, "post:Grant"),
-		//		beego.NSRouter("/users/:id([0-9]+)", &controllers.APIController{}, "get:GetUser"),
+		beego.NSRouter("grant", &controllers.APIController{}, "post:Grant"),
+		beego.NSRouter("/user/:phone([0-9]+)", &controllers.APIController{}, "get:GetUser"),
 		//		beego.NSRouter("/users", &controllers.APIController{}, "post:AddUser"),
 		//		beego.NSRouter("/users", &controllers.APIController{}, "put:UpdateUser"),
 		//		beego.NSRouter("/users/:id([0-9]+)", &controllers.APIController{}, "delete:DeleteUser"),
@@ -56,6 +55,7 @@ func init() {
 	)
 
 	beego.AddNamespace(releaseThirdNS)
+	beego.Router("*", &controllers.MainController{}, "get:Home")
 }
 
 func addFilters() {

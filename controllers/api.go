@@ -688,3 +688,15 @@ func (c *APIController) GetAccessLevel() []string {
 	logs.Info("===========accesslevel:[%v]", accesslevel)
 	return accesslevel
 }
+
+func (c *APIController) GetUser() {
+	phone := c.Ctx.Input.Param(":phone")
+	db, _ := ms.InitDb()
+
+	var user ms.User
+	db.Where("phone = ?", phone).First(&user)
+
+	c.setData(user)
+	c.Data["json"] = c.GenRetJSON()
+	c.ServeJSON()
+}

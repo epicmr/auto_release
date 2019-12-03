@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <h1 class="center">Welcome</h1>
+    <div class="home">
+        <router-view/>
     </div>
 </template>
 
@@ -13,14 +13,16 @@ export default {
         }
     },
     created: function() {
-        console.log(this.$store.state.loadingcount)
+        //console.log(this.$store.state.loadingcount)
     },
     name: "v-welcome"
 };
 </script>
 
-<style>
-.center{
-    text-align:center;
+<style lang="scss">
+.home{
+    position: absolute;
+    left: 50%;
+    top: 50%;
 }
 <style>

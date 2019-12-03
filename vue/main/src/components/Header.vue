@@ -1,6 +1,7 @@
 <template>
     <div>
         <el-col id="header" class="site-header">
+            <el-button class="logout-button" size="mini" @click="logout">注销</el-button>
         </el-col div>
     </div>
 </template>
@@ -15,6 +16,10 @@ export default {
         }
     },
     methods: {
+        logout () {
+            console.log('logout')
+            this.$http.get('/session/logout')
+        }
     }
 };
 </script>
