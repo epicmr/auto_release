@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-menu name="side" :default-active="$route.path" @select="SelectHandler" router :unique-opened=false>
+        <el-menu name="side" :default-active="$route.path" @select="SelectHandler" router :unique-opened=true>
             <v-menu v-bind:items="this.itemstree"></v-menu>
         </el-menu>
     </div>

@@ -23,7 +23,7 @@
                 </el-input>
             </el-col>
         </el-row>
-        <!--el-row>
+        <el-row>
             <el-col :span=16>
                 <el-input class="input" v-model="selected.local_path" :disabled="editdisable">
                     <template slot="prepend">本地目录</template>
@@ -31,17 +31,6 @@
             </el-col>
             <el-col :span=8>
                 <small>{{selected.serv_md5}}</small>
-            </el-col>
-        </el-row-->
-
-        <el-row :key="list" v-for="env in selected.serv_envs">
-            <el-col :span=16>
-                <el-input v-model:value="env.remote_path" class="input" :disabled="editdisable">
-                    <template slot="prepend">{{env.env}}</template>
-                </el-input>
-            </el-col>
-            <el-col :span=8>
-                <small>{{env.serv_md5}}</small>
             </el-col>
         </el-row>
 
@@ -56,7 +45,7 @@
     import { mapState } from 'vuex'
 
     export default {
-        name: "v-select",
+        name: "v-dirconf",
         data() {
             return {
                 selectedName: '',
