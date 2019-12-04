@@ -229,7 +229,7 @@ func (c *APIController) GetConfsWithMd5() {
 	}
 
 	//获取本地md5
-	{
+	/*{
 		var stderr, stdout bytes.Buffer
 		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
 		cmd := exec.Command("/bin/bash", "-c", s)
@@ -248,6 +248,10 @@ func (c *APIController) GetConfsWithMd5() {
 		if len(vecList) > 0 {
 			serv.ServMd5 = vecList[0]
 		}
+	}*/
+	err := c.GetLocalPathMd5(&serv)
+	if err != nil {
+		goto step
 	}
 
 step:
@@ -350,7 +354,7 @@ func (c *APIController) CheckMD5() {
 	servType2 := host.ServType
 
 	//获取本地md5
-	{
+	/*{
 		var stderr, stdout bytes.Buffer
 		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
 		cmd := exec.Command("/bin/bash", "-c", s)
@@ -369,6 +373,11 @@ func (c *APIController) CheckMD5() {
 		if len(vecList) > 0 {
 			serv.ServMd5 = vecList[0]
 		}
+	}*/
+	err := c.GetLocalPathMd5(&serv)
+	if err != nil {
+		c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
+		goto end
 	}
 
 	if (1<<uint8(servType1))&servType2 > 0 {
@@ -414,10 +423,9 @@ func (c *APIController) CheckTime() {
 
 	var env ms.Env
 	var serv ms.Serv
-
+	var err error
 	db.Preload("Hosts").Where("name = ?", ob.Env).First(&env).GetErrors()
 	db.Preload("ServEnvs").Where("serv_name = ?", ob.ServName).First(&serv).GetErrors()
-
 	mapServEnv := make(map[string]*ms.ServEnv)
 	for i, servEnv := range serv.ServEnvs {
 		mapServEnv[servEnv.Env] = &serv.ServEnvs[i]
@@ -467,7 +475,7 @@ func (c *APIController) CheckTime() {
 
 	servType2 = host.ServType
 	//获取本地md5
-	{
+	/*{
 		var stderr, stdout bytes.Buffer
 		s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
 		cmd := exec.Command("/bin/bash", "-c", s)
@@ -485,6 +493,11 @@ func (c *APIController) CheckTime() {
 		if len(vecList) > 0 {
 			serv.ServMd5 = vecList[0]
 		}
+	}*/
+	err = c.GetLocalPathMd5(&serv)
+	if err != nil {
+		c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
+		goto end
 	}
 
 	if (1<<uint8(servType1))&servType2 > 0 {
@@ -699,4 +712,34 @@ func (c *APIController) GetUser() {
 	c.setData(user)
 	c.Data["json"] = c.GenRetJSON()
 	c.ServeJSON()
+}
+
+//获取本地md5
+func (c *APIController) GetLocalPathMd5(serv *ms.Serv) error {
+	var stderr, stdout bytes.Buffer
+	var user ms.User
+	var userConf ms.UserConf
+	db, _ := ms.InitDb()
+
+	phone := c.GetSession("current_user")
+	db.Where("phone = ?", phone).Find(&user)
+	db.Where("user_id = ? AND serv_id = ?", user.UserID, serv.ID).Find(&userConf)
+	serv.LocalPath = userConf.LocalPath
+	s := fmt.Sprintf("md5sum %s/%s", userConf.LocalPath, serv.ServName)
+	cmd := exec.Command("/bin/bash", "-c", s)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		logs.Info("exec[%s] failed. Error:[%s]", s, stderr.String())
+		return err
+	}
+
+	vecList := strings.Split(stdout.String(), " ")
+	logs.Info(vecList)
+	if len(vecList) > 0 {
+		serv.ServMd5 = vecList[0]
+	}
+	return nil
 }
