@@ -19,11 +19,17 @@ var (
 	baseObjGroup string
 	baseSubGroup string
 	E            *casbin.Enforcer
+	AppPath      string
+	CgiPath      string
+	GoPath       string
 )
 
 func init() {
 	baseObjGroup = "root"
 	baseSubGroup = "base"
+	AppPath = "/data/upgrade/app"
+	CgiPath = "/data/upgrade/cgi"
+	GoPath = "/data/upgrade/go"
 }
 
 // JSONRetMsg represent return data
@@ -249,7 +255,7 @@ func (c *APIController) GetConfsWithMd5() {
 			serv.ServMd5 = vecList[0]
 		}
 	}*/
-	err := c.GetLocalPathMd5(&serv)
+	err := c.GetLocalPathMd5(&serv, "local")
 	if err != nil {
 		goto step
 	}
@@ -374,7 +380,7 @@ func (c *APIController) CheckMD5() {
 			serv.ServMd5 = vecList[0]
 		}
 	}*/
-	err := c.GetLocalPathMd5(&serv)
+	err := c.GetLocalPathMd5(&serv, ob.Env)
 	if err != nil {
 		c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
 		goto end
@@ -494,7 +500,7 @@ func (c *APIController) CheckTime() {
 			serv.ServMd5 = vecList[0]
 		}
 	}*/
-	err = c.GetLocalPathMd5(&serv)
+	err = c.GetLocalPathMd5(&serv, ob.Env)
 	if err != nil {
 		c.setError(1, fmt.Sprintf("本地[%s]MD5SUM失败. ", serv.ServName))
 		goto end
@@ -715,17 +721,28 @@ func (c *APIController) GetUser() {
 }
 
 //获取本地md5
-func (c *APIController) GetLocalPathMd5(serv *ms.Serv) error {
+func (c *APIController) GetLocalPathMd5(serv *ms.Serv, env string) error {
 	var stderr, stdout bytes.Buffer
-	var user ms.User
-	var userConf ms.UserConf
-	db, _ := ms.InitDb()
+	if env == "local" {
+		var user ms.User
+		var userConf ms.UserConf
+		db, _ := ms.InitDb()
 
-	phone := c.GetSession("current_user")
-	db.Where("phone = ?", phone).Find(&user)
-	db.Where("user_id = ? AND serv_id = ?", user.UserID, serv.ID).Find(&userConf)
-	serv.LocalPath = userConf.LocalPath
-	s := fmt.Sprintf("md5sum %s/%s", userConf.LocalPath, serv.ServName)
+		phone := c.GetSession("current_user")
+		db.Where("phone = ?", phone).Find(&user)
+		db.Where("user_id = ? AND serv_id = ?", user.UserID, serv.ID).Find(&userConf)
+		serv.LocalPath = userConf.LocalPath
+	} else {
+		if serv.ServType == 1 {
+			serv.LocalPath = CgiPath
+		} else if serv.ServType == 2 {
+			serv.LocalPath = AppPath
+		} else if serv.ServType == 3 {
+			serv.LocalPath = GoPath
+		}
+		logs.Info("其他环境，localPath.[%v], servType.[%v]", serv.LocalPath, serv.ServType)
+	}
+	s := fmt.Sprintf("md5sum %s/%s", serv.LocalPath, serv.ServName)
 	cmd := exec.Command("/bin/bash", "-c", s)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
