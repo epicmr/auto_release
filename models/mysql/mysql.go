@@ -108,6 +108,20 @@ type LoginRequest struct {
 	Passwd string `json:"passwd"`
 }
 
+type CasUser struct {
+	CasId      int    `json:"cas_id"`
+	Name       string `json:"name"`
+	EmployeeId string `json:"employee_id"`
+	Mobile     string `json:"mobile"`
+}
+
+type CasUserResp struct {
+	Users   []CasUser `json:"data"`
+	Total   int       `json:"total"`
+	Status  int       `json:"status"`
+	Message string    `json:"message"`
+}
+
 func InitDb() (*gorm.DB, error) {
 	if db != nil {
 		logs.Info("%#v", db.DB().Stats())
