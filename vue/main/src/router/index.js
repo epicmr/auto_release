@@ -2,8 +2,8 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Login from '../components/Login'
 import Regist from '../components/Regist'
+import Main from '../components/Main'
 import Home from '../components/Home'
-import Welcome from '../components/Welcome'
 import Release from '../components/Release'
 import EnvConf from '../components/conf/EnvConf'
 import HostConf from '../components/conf/HostConf'
@@ -11,6 +11,7 @@ import RouteConf from '../components/conf/RouteConf'
 import PrivConf from '../components/conf/PrivConf'
 import GroupConf from '../components/conf/GroupConf'
 import ServConf from '../components/conf/ServConf'
+import DirConf from '../components/conf/DirConf'
 import UserRepair from '../components/repair/UserRepair'
 import VipRepair from '../components/repair/VipRepair'
 import CouponRepair from '../components/repair/CouponRepair'
@@ -26,8 +27,8 @@ Vue.use(Router)
 const routes = [
     {
         path: '/',
-        name: 'Welcome',
-        component: Welcome,
+        name: 'Home',
+        component: Home,
         meta : {
             requireAuth: true, 
         },
@@ -35,7 +36,7 @@ const routes = [
             {
                 path: 'session',
                 name: 'Session',
-                component: Welcome,
+                component: Home,
                 children:[
                     {
                         path: 'login',
@@ -51,16 +52,12 @@ const routes = [
             },
             {
                 path: '',
-                name: 'Home',
-                component: Home,
+                name: 'Main',
+                component: Main,
                 meta : {
                     requireAuth: true, 
                 },
                 children:[
-                    {
-                        path: '',
-                        component: Welcome
-                    },
                     {
                         path: 'release-(local|test|stg|seta|setb|setc|sete)',
                         component: Release
@@ -80,6 +77,10 @@ const routes = [
                     {
                         path: 'conf-serv',
                         component: ServConf
+                    },
+                    {
+                        path: 'conf-dir',
+                        component: DirConf
                     },
                     {
                         path: 'conf-priv',
@@ -107,7 +108,7 @@ const routes = [
                     }
                 ]
             },
-            { path: '*', redirect: { name: 'Home' }}
+            { path: '*', redirect: { name: 'Main' }}
         ]
     }
 ]
