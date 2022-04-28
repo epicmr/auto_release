@@ -41,7 +41,7 @@
     "write-file-webpack-plugin": "^4.2.0"
   },
   "dependencies": {
-    "async": "^2.6.1",
+    "async": "^2.6.4",
     "axios": "^0.17.1",
     "babel-polyfill": "^6.26.0",
     "buefy": "^0.6.1",
